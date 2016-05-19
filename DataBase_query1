@@ -1,0 +1,83 @@
+CREATE DATABASE IF NOT EXISTS Airline;
+
+USE Airline;
+
+CREATE TABLE IF NOT EXISTS Plane(
+	idPlane INT UNIQUE,
+    Name varchar (25),
+    FirstClass int,
+    EconomyClass int,
+    CoachClass int
+);
+
+CREATE TABLE IF NOT EXISTS Employee(
+	idEmployee int AUTO_INCREMENT UNIQUE,
+    Fname varchar(20),
+    Lname varchar(25),
+    Password varchar(40),
+    Position enum('CEO','Cashier','Secretary'),
+    Salary int
+);
+
+CREATE TABLE IF NOT EXISTS EmployeeAddress(
+	idEmployee int,
+    Hometown varchar(40),
+    Country varchar(40),
+    Address varchar(40),
+    Zip_code int
+);
+
+INSERT INTO Employee
+	(Fname, Lname, Password, Position, Salary)
+    values
+    ('Filip', 'Malek', 'MalekJeCar', 'Cashier', 100000),
+    ('Denis', 'Kutnar', '1111', 'CEO', 100000),
+    ('Patrik', 'Ando', 'PatrikTheStar', 'Secretary', 100000);
+    
+INSERT INTO Plane
+	(idPlane,Name, FirstClass, EconomyClass, CoachClass )
+    values
+    (21281, 'Boeing 777', 16,194, 37),
+    (32939, 'Boeing 747', 8,262, 92 ),
+    (32222, 'Dash 8-Q400', 4, 70,2),
+    (23232, 'Airbus 319', 6,130, 5),
+    (90757, 'Airbus 320', 7, 150, 7);
+    
+    SELECT * FROM Plane;
+    
+    SELECT * FROM Employee;
+    
+	CREATE TABLE IF NOT EXISTS Flights(
+		idFlights int AUTO_INCREMENT UNIQUE,
+        Plane_id int,
+        Destination varchar(50),
+        Pass_num int,
+        Return_value varchar(40),
+        From_date varchar(50),
+        Return_date varchar(50)
+    );
+    
+    ALTER TABLE Flights
+    ADD passExpected int,
+    ADD passOnBoard int;
+    
+    ALTER TABLE Flights
+    DROP COLUMN Pass_num;
+    
+    ALTER TABLE Flights
+    DROP COLUMN Return_value;
+
+    
+    CREATE TABLE IF NOT EXISTS CUSTOMER(
+		idCustomer int AUTO_INCREMENT UNIQUE,
+        FullName varchar(30),
+        Passport_ID varchar(50),
+        Flight_ID varchar(30)
+    );
+    
+    INSERT INTO Flights
+    (Plane_id, Destination, From_date, Return_date, passExpected)
+    values
+    ('21281','Vancouver, Canada', '10/6/2016','false',247),
+    ('32939','Montreal, Canada', '12/6/2016','15/6/2016',260),
+    ('90757','Zagreb, Croatia', '23/6/2016','false',167);
