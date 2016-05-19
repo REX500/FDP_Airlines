@@ -445,17 +445,55 @@ public class main extends Application {
                     break;
                 }
                 if(flightArrayList.size() - i ==1){
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Flight available");
                     alert.setContentText("Your flight can be scheduled!");
                     alert.setHeaderText(null);
 
                     alert.show();
                     try {
-                        Thread.sleep(4000);
+                        Thread.sleep(2500);
+                        alert.close();
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
+                    // now we have to enable other buttons and schedule a flight
+
+                    Label passExpectedLabel = new Label("Passengers expected: ");
+                    Label destLabel = new Label("Destination: ");
+                    TextField passText = new TextField();
+                    passText.setPromptText("Enter numerical number of passengers");
+                    TextField destText = new TextField();
+                    destText.setPromptText("Enter the destination");
+
+                    Button scheduleButton = new Button("Schedule a flight!");
+
+                    grid.setConstraints(passExpectedLabel, 0,3);
+                    grid.setConstraints(passText, 1,3);
+                    grid.setConstraints(destLabel, 0,4);
+                    grid.setConstraints(destText, 1,4);
+                    grid.setConstraints(backButton, 0,5);
+                    grid.setConstraints(scheduleButton,1,5);
+
+                    grid.getChildren().addAll(passExpectedLabel, passText, destLabel, destText, scheduleButton);
+
+                    scheduleButton.setOnAction(b->{
+                        // here we will schedule a flight and input it into a database
+                        String passExpectext = passText.getText();
+                        int passE = Integer.parseInt(passExpectext);
+                        String destination = destText.getText();
+                        try {
+                            flightDataBase.scheduleFlight(realId, destination, fromDate, toDate, passE);
+                        } catch (SQLException e1) {
+                            e1.printStackTrace();
+                        }
+                        Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert1.setTitle("Flight Scheduling Successful!");
+                        alert1.setContentText("Your flight has been scheduled!");
+                        alert1.setHeaderText(null);
+
+                        employeeView();
+                    });
                 }
             }
             //!!!!!!!!!!!!!!!!!!
