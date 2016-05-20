@@ -3,6 +3,7 @@ package guiLayer;
 import applicationLayer.Employee;
 import applicationLayer.Flight;
 import applicationLayer.Plane;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import dataBaseLayer.dbInit;
 import dataBaseLayer.employeeDataBase;
 import dataBaseLayer.flightDataBase;
@@ -22,8 +23,10 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -76,8 +79,20 @@ public class main extends Application {
         Menu edit = new Menu("Edit");
         Menu help = new Menu("Help");
 
+        MenuItem oscaItem = new MenuItem("OSCA");
+
+        edit.getItems().add(oscaItem);
+
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(file,edit,help);
+
+        oscaItem.setOnAction(e -> {
+            try {
+                oscaMethod();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
 
         VBox topVbox = new VBox();
 
@@ -116,15 +131,64 @@ public class main extends Application {
 
 
         HBox calendar = new HBox(100);
-        calendar.getChildren().addAll(datePickerFrom,datePickerTo);
+        calendar.getChildren().addAll(datePickerFrom, datePickerTo);
 
 
         HBox labelBox = new HBox(100);
-        Label labelFrom = new Label("From date");
-        Label labelTo = new Label("To date");
-        labelBox.getChildren().addAll(labelFrom, labelTo);
+        Label labelFrom = new Label("Departure Date");
+        Label labelReturn = new Label("Return Date");
+        labelBox.getChildren().addAll(labelFrom, labelReturn);
         vBox.getChildren().addAll(searchText,labelBox,calendar, searchButton);
         book.setContent(vBox);
+        searchButton.setOnAction(e-> {
+            String searchedDestination = searchText.getText();
+            LocalDate datePicFrom = datePickerFrom.getValue();
+            LocalDate datePicTo = datePickerTo.getValue();
+            // here we get the date values from the datepicker and store
+            // it into a string variable divided by a slash /
+            int firstDay = datePicFrom.getDayOfMonth();
+            int firstMonth = datePicFrom.getMonthValue();
+            int firstYear = datePicFrom.getYear();
+            String  realFirstDate = firstDay+"/"+firstMonth+"/"+firstYear;
+            System.out.println(realFirstDate);
+
+            int secondDay = datePicTo.getDayOfMonth();
+            int secondMonth = datePicTo.getMonthValue();
+            int secondYear = datePicTo.getYear();
+            String realSecondDate = secondDay+"/"+secondMonth+"/"+secondYear;
+
+            ArrayList<Flight> flightList = new ArrayList<Flight>();
+            // now when we have dates we need to search if the actual flight in that date exists
+            flightDataBase flightDataBase = new flightDataBase();
+            try {
+                flightList = flightDataBase.getFlights();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            for(int i= 0 ; i < flightList.size(); i++){
+                // here we check if all three parameters match
+                if(searchedDestination.equals(flightList.get(i).getDestination()) && realFirstDate.equals(flightList.get(i).getFromDate()) && realSecondDate.equals(flightList.get(i).getReturnDate())){
+                    // now that it matches we do something with it
+                    // we make a view with the flight
+                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate);
+                    break;
+                }
+                // if destination match
+                if(searchedDestination.equals(flightList.get(i).getDestination())){
+                    // here only the destination will match
+                    flightMatchHalf(searchedDestination);
+                    break;
+                }
+                // if there isnt a flight to that country at all
+                if(flightList.size() - i ==1){
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("No Flights Found");
+                    alert.setContentText("We are sorry but we didnt manage to find any flight to the desired country");
+                    alert.setHeaderText(null);
+                    alert.showAndWait();
+                }
+            }
+        });
 
         tabPane = new TabPane();
         tabPane.getTabs().addAll(book, myBooking, checkIn, flightStatus);
@@ -147,6 +211,53 @@ public class main extends Application {
         window.show();
 
     }
+
+    //method that displays the flight
+
+    private void flightMatchesView(String dest, String departDate, String returnDate){
+        Label destLabel = new Label("Destination: "+dest);
+        Label departLabel = new Label("Departure Date: "+departDate);
+        Label returnLabel = new Label("Return Date: "+ returnDate);
+
+        VBox vBox = new VBox(10);
+        vBox.setPadding(new Insets(20,20,20,20));
+
+        Button bookButton = new Button("Book");
+
+        vBox.getChildren().addAll(destLabel, departLabel, returnLabel, bookButton);
+
+        borderPane.setCenter(vBox);
+    }
+
+    ListView<String> listView;
+    private void flightMatchHalf(String dest){
+        listView = new ListView<>();
+        flightDataBase fdb = new flightDataBase();
+        try {
+            flightArrayList = fdb.getFlights();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        for(int i = 0 ; i < flightArrayList.size(); i++){
+            if(dest.equals(flightArrayList.get(i).getDestination())){
+                String view = flightArrayList.get(i).getDestination()+","+flightArrayList.get(i).getFromDate()+","+flightArrayList.get(i).getReturnDate();
+                listView.getItems().add(view);
+            }
+        }
+        Button back = new Button("Back");
+        Button book = new Button("Book A Ticket");
+
+        HBox hBox = new HBox(8);
+        hBox.getChildren().addAll(book, back);
+
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(listView, hBox);
+        vBox.setPadding(new Insets(20,20,20,20));
+
+        borderPane.setCenter(vBox);
+    }
+
 
     //method for the employees to log in
 
@@ -291,7 +402,7 @@ public class main extends Application {
         // improve performance
         ImageView iv2 = new ImageView();
         iv2.setImage(image);
-        iv2.setFitWidth(100);
+        iv2.setFitWidth(200);
         iv2.setPreserveRatio(true);
         iv2.setSmooth(true);
         iv2.setCache(true);
@@ -368,13 +479,43 @@ public class main extends Application {
                 e1.printStackTrace();
             }
         });
+        employeeButton.setOnAction(e->{
+            try {
+                employeesMethod();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
 
         borderPane.setCenter(grid);
         borderPane.setTop(menuBar);
     }
 
     ArrayList<Flight> flightArrayList;
+    int realId=0;
     private void scheduleFlightMethod(){
+        ComboBox<String> planesComboBox = new ComboBox<String>();
+        planesComboBox.getItems().addAll("Airbus 319","Airbus 320","Boeing 747","Boeing 777","Dash 8-Q400");
+        planesComboBox.setEditable(false);
+
+
+
+
+        planesComboBox.setOnAction(event -> {
+            if(planesComboBox.getValue().equals("Airbus 319"))
+                realId=23232;
+            if(planesComboBox.getValue().equals("Airbus 320"))
+                realId=90757;
+            if(planesComboBox.getValue().equals("Boeing 747"))
+                realId=32939;
+            if(planesComboBox.getValue().equals("Boeing 777"))
+                realId=21281;
+            if(planesComboBox.getValue().equals("Dash 8-Q400"))
+                realId=32222;
+        });
+
+
+
         Label label3 = new Label("From Date: ");
         Label label2 = new Label("Return Date: ");
         Label label1 = new Label("Plane ID: ");
@@ -397,7 +538,7 @@ public class main extends Application {
         grid.setVgap(10);
 
         grid.setConstraints(label1, 0,0);
-        grid.setConstraints(text1, 1,0);
+        grid.setConstraints(planesComboBox, 1,0);
         grid.setConstraints(label3, 0,1);
         grid.setConstraints(text2, 1,1);
         grid.setConstraints(label2, 0,2);
@@ -405,7 +546,8 @@ public class main extends Application {
         grid.setConstraints(backButton, 0,3);
         grid.setConstraints(checkButton,1,3);
 
-        grid.getChildren().addAll(label1, label2, label3, text1, text2, text3, backButton, checkButton);
+
+        grid.getChildren().addAll(label1, label2, label3,text2, text3, backButton, checkButton,planesComboBox);
         borderPane.setCenter(grid);
 
         backButton.setOnAction(e-> employeeView());
@@ -413,8 +555,6 @@ public class main extends Application {
         checkButton.setOnAction(e->{
             String fromDate = text2.getText();
             String toDate = text3.getText();
-            String planeId = text1.getText();
-            int realId = Integer.parseInt(planeId);
 
             flightDataBase flightDataBase = new flightDataBase();
             try {
@@ -452,7 +592,7 @@ public class main extends Application {
 
                     alert.show();
                     try {
-                        Thread.sleep(2500);
+                        Thread.sleep(2000);
                         alert.close();
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
@@ -491,14 +631,169 @@ public class main extends Application {
                         alert1.setTitle("Flight Scheduling Successful!");
                         alert1.setContentText("Your flight has been scheduled!");
                         alert1.setHeaderText(null);
+                        alert1.showAndWait();
 
                         employeeView();
                     });
                 }
             }
-            //!!!!!!!!!!!!!!!!!!
-            // i need to make a cause in which he entered the return date as well
-            // after that make a if(flightArray.size() - i = 1){ you are good to go}
+        });
+    }
+
+    private void oscaMethod()throws Exception{
+        // this method will take two database tables and put all the data into a comma separated file
+
+        File file = new File("OSCAEmployee.csv");
+        PrintWriter out = new PrintWriter(new FileWriter(file, true));
+
+        // first table is the employee table
+        employeeDataBase emp = new employeeDataBase();
+        ArrayList<Employee> employeeList = new ArrayList<>();
+        employeeList = emp.getEmployee();
+
+        for(int i = 0; i < employeeList.size(); i++){
+            out.println(employeeList.get(i).getIdEmployee()+","+employeeList.get(i).getFname()+","+employeeList.get(i).getLname()+","+employeeList.get(i).getPassword()+","+employeeList.get(i).getPosition()+","+employeeList.get(i).getSalary());
+        }
+
+        // now we print the plane table into the same file
+        planeDataBase pln = new planeDataBase();
+        ArrayList<Plane> planeArrayList = new ArrayList<>();
+        planeArrayList = pln.getPlanes();
+
+        File file2 = new File("OSCAPlane.csv");
+        PrintWriter out2 = new PrintWriter(new FileWriter(file2, true));
+        for(int j = 0; j < planeArrayList.size(); j++){
+            out2.println(planeArrayList.get(j).getIdPlane()+","+planeArrayList.get(j).getName()+","+planeArrayList.get(j).getCoachClass()+","+planeArrayList.get(j).getEconomyClass()+","+planeArrayList.get(j).getFirstClass());
+        }
+        out.close();
+        out2.close();
+    }
+
+    TableView<Employee> employeeTable;
+    private void employeesMethod() throws SQLException {
+        // in this method we will be able to see all the employee's
+        // and manage them as well as add aditional data
+
+        TableColumn<Employee, Integer> empId = new TableColumn<>("ID");
+        empId.setMinWidth(100);
+        empId.setCellValueFactory(new PropertyValueFactory<>("idEmployee"));
+
+        TableColumn<Employee, String> empfname = new TableColumn<>("First Name");
+        empfname.setMinWidth(100);
+        empfname.setCellValueFactory(new PropertyValueFactory<>("fname"));
+
+        TableColumn<Employee, String> emplname = new TableColumn<>("Last Name");
+        emplname.setMinWidth(100);
+        emplname.setCellValueFactory(new PropertyValueFactory<>("lname"));
+
+        TableColumn<Employee, String> emppass = new TableColumn<>("Password");
+        emppass.setMinWidth(100);
+        emppass.setCellValueFactory(new PropertyValueFactory<>("password"));
+
+        TableColumn<Employee, String> emppos = new TableColumn<>("Position");
+        emppos.setMinWidth(100);
+        emppos.setCellValueFactory(new PropertyValueFactory<>("position"));
+
+        TableColumn<Employee, Integer> empsal = new TableColumn<>("Salary");
+        empsal.setMinWidth(100);
+        empsal.setCellValueFactory(new PropertyValueFactory<>("salary"));
+
+        employeeTable = new TableView<>();
+        employeeTable.getColumns().addAll(empId, empfname, emplname, emppass, emppos, empsal);
+        employeeTable.setItems(getEmployees());
+
+        // now we make a few buttons that can give us the info about the emp or just go
+        // back to the employee view
+
+        Button empInfo = new Button("Info");
+        Button back = new Button("Back");
+
+        // now we put all of it into a vbox
+
+        HBox hBox = new HBox(10);
+        hBox.getChildren().addAll(empInfo, back);
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(employeeTable, hBox);
+
+        borderPane.setCenter(vBox);
+
+        // now lets make a easy action listener for a back button
+
+        back.setOnAction(e-> employeeView());
+
+        // and now for the info
+        empInfo.setOnAction(e->{
+            //first we need to see what the emp clicked on
+            Employee newE = employeeTable.getSelectionModel().getSelectedItem();
+            // with this we just constructed a employee object from the table
+            // we can easily use all the getters and setters now
+            int id = newE.getIdEmployee();
+            String fname = newE.getFname();
+            String lname = newE.getLname();
+            String pos = newE.getPosition();
+            String pass = newE.getPassword();
+            int sal = newE.getSalary();
+
+            // now we call a method that will show us all the info about the employee
+
+            employeeInfo(id, fname, lname, pos, pass, sal);
+        });
+    }
+
+    private ObservableList<Employee> getEmployees()throws  SQLException{
+        ObservableList<Employee> employeeObservableList = FXCollections.observableArrayList();
+        employeeDataBase emp = new employeeDataBase();
+        ArrayList<Employee> employeeArrayList = emp.getEmployee();
+        for(int i = 0; i < employeeArrayList.size(); i++){
+            employeeObservableList.add(employeeArrayList.get(i));
+        }
+        return employeeObservableList;
+    }
+
+    private void employeeInfo(int id, String fname, String lname, String pos, String pass, int sal){
+        // in this method we will display all the employee info
+        Label idLabel = new Label("Employee ID: "+ id);
+        Label fLabel = new Label("First Name: "+ fname);
+        Label lLabel = new Label("Last Name: "+lname);
+        Label posLabel = new Label("Position: "+pos);
+        Label salLabel = new Label("Salary: "+sal);
+        Label passLabel = new Label("Password: "+pass);
+
+        //setting the image from to src folder
+        String nameExt = fname+".jpg";
+        Image image = new Image(nameExt);
+
+        // resizes the image to have width of 100 while preserving the ratio and using
+        // higher quality filtering method; this ImageView is also cached to
+        // improve performance
+        ImageView iv2 = new ImageView();
+        iv2.setImage(image);
+        iv2.setFitWidth(200);
+        iv2.setPreserveRatio(true);
+        iv2.setSmooth(true);
+        iv2.setCache(true);
+
+        Button back = new Button("Back");
+        Button moreInfo = new Button("More Info");
+        Button changeInfo = new Button("Change Info");
+
+        HBox mainHbox = new HBox(10);
+        VBox labelVbox = new VBox(8);
+        VBox btnVbox = new VBox(10);
+
+        labelVbox.getChildren().addAll(idLabel, fLabel, lLabel, posLabel, salLabel, passLabel);
+        btnVbox.getChildren().addAll(moreInfo, changeInfo, back);
+
+        mainHbox.getChildren().addAll(iv2, labelVbox, btnVbox);
+
+        borderPane.setCenter(mainHbox);
+
+        back.setOnAction(e -> {
+            try {
+                employeesMethod();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
         });
     }
 }
