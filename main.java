@@ -4,10 +4,7 @@ import applicationLayer.Employee;
 import applicationLayer.Flight;
 import applicationLayer.Plane;
 import com.sun.org.apache.bcel.internal.generic.RETURN;
-import dataBaseLayer.dbInit;
-import dataBaseLayer.employeeDataBase;
-import dataBaseLayer.flightDataBase;
-import dataBaseLayer.planeDataBase;
+import dataBaseLayer.*;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,6 +25,7 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Scanner;
 
 /**
@@ -241,7 +239,7 @@ public class main extends Application {
 
         for(int i = 0 ; i < flightArrayList.size(); i++){
             if(dest.equals(flightArrayList.get(i).getDestination())){
-                String view = flightArrayList.get(i).getDestination()+","+flightArrayList.get(i).getFromDate()+","+flightArrayList.get(i).getReturnDate();
+                String view =(i+1)+". "+ flightArrayList.get(i).getDestination()+","+flightArrayList.get(i).getFromDate()+","+flightArrayList.get(i).getReturnDate();
                 listView.getItems().add(view);
             }
         }
@@ -254,6 +252,18 @@ public class main extends Application {
         VBox vBox = new VBox(10);
         vBox.getChildren().addAll(listView, hBox);
         vBox.setPadding(new Insets(20,20,20,20));
+
+        book.setOnAction(e-> {
+
+            String pick = listView.getSelectionModel().getSelectedItem();
+            char v = pick.charAt(0);
+            int value = Integer.parseInt(String.valueOf(v));
+            System.out.println(value);
+            int realV = value -1;
+            int flightId = flightArrayList.get(realV).getIdFlights();
+
+            registerCustomer(flightId, dest);
+        });
 
         borderPane.setCenter(vBox);
     }
@@ -471,6 +481,7 @@ public class main extends Application {
             grid.getChildren().add(buttonHbox);
 
             scheduleFlight.setOnAction(d-> scheduleFlightMethod());
+            seeFlights.setOnAction(dick -> seeFlightsTable());
         });
         planeButton.setOnAction(e -> {
             try {
@@ -795,5 +806,127 @@ public class main extends Application {
                 e1.printStackTrace();
             }
         });
+    }
+
+    private void registerCustomer(int flightId, String dest){
+        TextField fullnameField = new TextField();
+        TextField passIDField = new TextField();
+
+        Label nameLabel = new Label("Customer's Full Name: ");
+        Label passIDLabel = new Label("Customer's Passport Number: ");
+
+        Button bookButton = new Button("Book");
+        Button backButton = new Button("Back");
+
+        HBox hBox = new HBox(10);
+        hBox.getChildren().addAll(bookButton, backButton);
+
+        VBox vBox = new VBox(10);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(10,10,10,10));
+
+        grid.setConstraints(nameLabel, 0,0);
+        grid.setConstraints(fullnameField, 1,0);
+        grid.setConstraints(passIDLabel,0,1);
+        grid.setConstraints(passIDField, 1,1);
+
+        grid.getChildren().addAll(nameLabel, fullnameField, passIDField, passIDLabel);
+
+        vBox.getChildren().addAll(grid, hBox);
+
+        borderPane.setCenter(vBox);
+
+        // listeners 4 d buttons
+
+        backButton.setOnAction(e-> flightMatchHalf(dest));
+        bookButton.setOnAction(e->{
+            String name = fullnameField.getText();
+            String passport = passIDField.getText();
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Booking Confirmation");
+            alert.setHeaderText("Book a ticket");
+            alert.setContentText("Are you sure?");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK){
+                // ... user chose OK
+                customerDataBase cdb = new customerDataBase();
+                try {
+                    cdb.setCustomer(name, passport, String.valueOf(flightId));
+                    Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                    a.setTitle("Customer Registered");
+                    a.setContentText("Customer has been registered successfully!");
+                    a.setHeaderText(null);
+                    a.show();
+
+                    Thread.sleep(1500);
+                    a.close();
+
+                    flightMatchHalf(dest);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            } else {
+                // employee choses cancel
+
+            }
+        });
+    }
+
+    TableView<Flight> flightTable;
+    private void seeFlightsTable(){
+        TableColumn<Flight, Integer> flightID = new TableColumn<>("Flight ID");
+        flightID.setMinWidth(100);
+        flightID.setCellValueFactory(new PropertyValueFactory<>("idFlights"));
+
+        TableColumn<Flight, Integer> flightPlaneId = new TableColumn<>("Plane ID");
+        flightPlaneId.setMinWidth(100);
+        flightPlaneId.setCellValueFactory(new PropertyValueFactory<>("plane_id"));
+
+        TableColumn<Flight, String> flightDestination = new TableColumn<>("Destination");
+        flightDestination.setMinWidth(100);
+        flightDestination.setCellValueFactory(new PropertyValueFactory<>("destination"));
+
+        TableColumn<Flight, String> flightExpected = new TableColumn<>("Passengers Expected");
+        flightExpected.setMinWidth(100);
+        flightExpected.setCellValueFactory(new PropertyValueFactory<>("passExpected"));
+
+        TableColumn<Flight, String> flightOnBoard = new TableColumn<>("Passengers On Board");
+        flightOnBoard.setMinWidth(100);
+        flightOnBoard.setCellValueFactory(new PropertyValueFactory<>("passOnBoard"));
+
+        TableColumn<Flight, String> flightReturn = new TableColumn<>("Return Date");
+        flightReturn.setMinWidth(100);
+        flightReturn.setCellValueFactory(new PropertyValueFactory<>("returnDate"));
+
+        TableColumn<Flight, String> flightFrom = new TableColumn<>("From Date");
+        flightFrom.setMinWidth(100);
+        flightFrom.setCellValueFactory(new PropertyValueFactory<>("fromDate"));
+
+        flightTable = new TableView<>();
+        flightTable.getColumns().addAll(flightID, flightPlaneId, flightDestination, flightExpected, flightOnBoard, flightReturn, flightFrom);
+        flightTable.setItems(getFlights());
+
+        borderPane.setCenter(flightTable);
+    }
+
+    public ObservableList<Flight> getFlights(){
+        ObservableList<Flight> flightObservableList = FXCollections.observableArrayList();
+        flightDataBase flightDataBase = new flightDataBase();
+        ArrayList<Flight> flightList = new ArrayList<>();
+        try {
+            flightList = flightDataBase.getFlights();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        for(int i = 0 ; i< flightList.size(); i ++){
+            flightObservableList.add(flightList.get(i));
+        }
+        return flightObservableList;
     }
 }

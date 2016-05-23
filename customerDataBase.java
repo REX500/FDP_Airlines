@@ -19,4 +19,17 @@ public class customerDataBase {
             e.printStackTrace();
         }
     }
+    public void setCustomer(String name, String passport, String flightId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+
+            String update = String.format("INSERT INTO customer (FullName, Passport_id, Flight_id) VALUES ('%s', '%s', '%s')", name, passport, flightId);
+            s.executeUpdate(update);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

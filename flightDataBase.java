@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class flightDataBase {
     static final String JDBC_DRIVER  = "com.mysql.jdbc.Driver";
-    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?useSSl=true";
+    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline";
     static Connection con;
 
     ArrayList<Flight> flightArrayList;
