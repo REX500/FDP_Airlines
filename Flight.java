@@ -8,9 +8,35 @@ public class Flight {
     private int plane_id;
     private String destination;
     private int passExpected;
-    private int passOnBoard;
     private String returnDate;
     private String fromDate;
+    private int firstClass;
+    private int economyClass;
+    private int coachClass;
+
+    public int getFirstClass() {
+        return firstClass;
+    }
+
+    public void setFirstClass(int firstClass) {
+        this.firstClass = firstClass;
+    }
+
+    public int getEconomyClass() {
+        return economyClass;
+    }
+
+    public void setEconomyClass(int economyClass) {
+        this.economyClass = economyClass;
+    }
+
+    public int getCoachClass() {
+        return coachClass;
+    }
+
+    public void setCoachClass(int coachClass) {
+        this.coachClass = coachClass;
+    }
 
     public int getIdFlights() {
         return idFlights;
@@ -44,14 +70,6 @@ public class Flight {
         this.passExpected = passExpected;
     }
 
-    public int getPassOnBoard() {
-        return passOnBoard;
-    }
-
-    public void setPassOnBoard(int passOnBoard) {
-        this.passOnBoard = passOnBoard;
-    }
-
     public String getReturnDate() {
         return returnDate;
     }
@@ -68,14 +86,16 @@ public class Flight {
         this.fromDate = fromDate;
     }
 
-    public Flight(int id, int planeId, String destination, int passExpected, int passOnBoard, String returnDate, String fromDate){
+    public Flight(int id, int planeId, String destination, int passExpected, String returnDate, String fromDate, int firstClass, int economyClass, int coachClass){
         this.idFlights = id;
         this.plane_id = planeId;
         this.destination = destination;
         this.passExpected = passExpected;
-        this.passOnBoard = passOnBoard;
         this.returnDate = returnDate;
         this.fromDate = fromDate;
+        this.firstClass = firstClass;
+        this.economyClass = economyClass;
+        this.coachClass = coachClass;
     }
 
 }
