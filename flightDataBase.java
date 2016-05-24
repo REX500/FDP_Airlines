@@ -28,9 +28,11 @@ public class flightDataBase {
                 String fromDate = rs.getString("From_date");
                 String toDate = rs.getString("Return_date");
                 int passE = rs.getInt("passExpected");
-                int passO = rs.getInt("passOnBoard");
+                int fC = rs.getInt("firstClass");
+                int eC = rs.getInt("economyClass");
+                int cC = rs.getInt("coachClass");
 
-                Flight flight = new Flight(flightId, planeId, dest, passE, passO, toDate, fromDate);
+                Flight flight = new Flight(flightId, planeId, dest, passE, toDate, fromDate, fC, eC, cC);
 
                 flightArrayList.add(flight);
             }
@@ -49,6 +51,78 @@ public class flightDataBase {
             int passOnBoard = 0;
 
             String update = String.format("INSERT INTO flights (Plane_id, Destination, From_date, Return_date, passExpected, passOnBoard) VALUES ('%d', '%s', '%s', '%s','%d','%d')", planeId, dest, from, to, passExpected, passOnBoard);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    ArrayList<Flight> arrayList;
+    public Flight selectAFlight(int flightId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            String query = String.format("SELECT * FROM flights WHERE idFlights = '%d'", flightId);
+            ResultSet rs = s.executeQuery(query);
+            arrayList = new ArrayList<>();
+            while (rs.next()){
+                int fId = rs.getInt("idFlights");
+                int planeId = rs.getInt("Plane_id");
+                String dest = rs.getString("Destination");
+                String fromDate = rs.getString("From_date");
+                String toDate = rs.getString("Return_date");
+                int passE = rs.getInt("passExpected");
+                int fC = rs.getInt("firstClass");
+                int eC = rs.getInt("economyClass");
+                int cC = rs.getInt("coachClass");
+
+                Flight flight = new Flight(fId, planeId, dest, passE, toDate, fromDate, fC, eC, cC);
+                arrayList.add(flight);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return arrayList.get(0);
+    }
+
+    public void setFlightFirstSeats(int flightId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            int passOnBoard = 0;
+
+            String update = String.format("UPDATE flights SET firstClass = firstClass +1 WHERE idFlights = '%d'", flightId);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setFlightEconomySeats(int flightId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            int passOnBoard = 0;
+
+            String update = String.format("UPDATE flights SET economyClass = economyClass +1 WHERE idFlights = '%d'", flightId);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setFlightCoachSeats(int flightId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            int passOnBoard = 0;
+
+            String update = String.format("UPDATE flights SET coachClass = coachClass +1 WHERE idFlights = '%d'", flightId);
             s.executeUpdate(update);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

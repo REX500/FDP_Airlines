@@ -1,5 +1,6 @@
 package dataBaseLayer;
 
+import applicationLayer.Flight;
 import applicationLayer.Plane;
 
 import java.sql.*;
@@ -29,5 +30,25 @@ public class planeDataBase {
             e.printStackTrace();
         }
         return planeArrayList;
+    }
+
+    ArrayList<Plane> arrayList;
+    public Plane getPlane(int planeId)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            String query = String.format("SELECT * FROM plane WHERE idPlane = '%d'", planeId);
+            ResultSet rs = s.executeQuery(query);
+            arrayList = new ArrayList<>();
+            while (rs.next()){
+                Plane plane = new Plane(rs.getInt("idPlane"),rs.getString("Name"),rs.getInt("FirstClass"), rs.getInt("EconomyClass"), rs.getInt("CoachClass"));
+                arrayList.add(plane);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return arrayList.get(0);
     }
 }

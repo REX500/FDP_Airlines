@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -45,8 +46,12 @@ public class main extends Application {
     int runCheck;
     @Override
     public void start(Stage s)throws Exception{
+
+
         window = s;
         borderPane = new BorderPane();
+        borderPane.setId("pane-border");
+
 
         // checking whether the app has been run for the first time
 
@@ -83,6 +88,7 @@ public class main extends Application {
 
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(file,edit,help);
+        menuBar.setId("bar-menu");
 
         oscaItem.setOnAction(e -> {
             try {
@@ -92,13 +98,30 @@ public class main extends Application {
             }
         });
 
+        String nameExt = "logo.jpg";
+        Image logo = new Image(nameExt);
+
+        ImageView iv3 = new ImageView();
+        iv3.setImage(logo);
+        iv3.setFitWidth(130);
+        iv3.setPreserveRatio(true);
+        iv3.setSmooth(true);
+        iv3.setCache(true);
+
         VBox topVbox = new VBox();
 
         Button signIn = new Button("Sign in");
+        signIn.setId("in-sign");
+
 
         HBox topHbox = new HBox();
-        topHbox.getChildren().addAll(signIn);
-        signIn.setPadding(new Insets(0,0,0,250));
+
+        Region region = new Region();
+        region.setMinWidth(480);
+
+        topHbox.getChildren().addAll(iv3,region,signIn);
+        signIn.setPadding(new Insets(15,50,15,50));
+
 
         topVbox.getChildren().addAll(menuBar, topHbox);
 
@@ -115,10 +138,14 @@ public class main extends Application {
         // adding a search bar, search button and a calendar
         DatePicker datePicker = new DatePicker();
         TextField searchText = new TextField();
+        searchText.setPadding(new Insets(40,80,15,80));
         searchText.setPromptText("Search your destination...");
+        searchText.setId("text-search");
+        searchText.setAlignment(Pos.CENTER);
 
         Button searchButton = new Button("Search");
         VBox vBox = new VBox(10);
+        searchButton.setId("button-search");
 
         DatePicker datePickerFrom = new DatePicker();
         datePickerFrom.setPadding(new Insets(0,0,0,0));
@@ -132,11 +159,21 @@ public class main extends Application {
         calendar.getChildren().addAll(datePickerFrom, datePickerTo);
 
 
-        HBox labelBox = new HBox(100);
+        HBox labelBox = new HBox(180);
         Label labelFrom = new Label("Departure Date");
         Label labelReturn = new Label("Return Date");
         labelBox.getChildren().addAll(labelFrom, labelReturn);
-        vBox.getChildren().addAll(searchText,labelBox,calendar, searchButton);
+
+        HBox btnBox = new HBox();
+        btnBox.setPadding(new Insets(230,10,10,610));
+        btnBox.getChildren().addAll(searchButton);
+
+        searchButton.setPadding(new Insets(15,50,15,50));
+        vBox.getChildren().addAll(searchText,labelBox,calendar, btnBox);
+
+
+
+
         book.setContent(vBox);
         searchButton.setOnAction(e-> {
             String searchedDestination = searchText.getText();
@@ -168,7 +205,7 @@ public class main extends Application {
                 if(searchedDestination.equals(flightList.get(i).getDestination()) && realFirstDate.equals(flightList.get(i).getFromDate()) && realSecondDate.equals(flightList.get(i).getReturnDate())){
                     // now that it matches we do something with it
                     // we make a view with the flight
-                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate);
+                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate, flightList.get(i).getIdFlights());
                     break;
                 }
                 // if destination match
@@ -204,7 +241,8 @@ public class main extends Application {
             }
         });
 
-        scene = new Scene(borderPane, 700,500);
+        scene = new Scene(borderPane, 770,600);
+        scene.getStylesheets().add("Airline.css");
         window.setScene(scene);
         window.show();
 
@@ -212,7 +250,7 @@ public class main extends Application {
 
     //method that displays the flight
 
-    private void flightMatchesView(String dest, String departDate, String returnDate){
+    private void flightMatchesView(String dest, String departDate, String returnDate, int id){
         Label destLabel = new Label("Destination: "+dest);
         Label departLabel = new Label("Departure Date: "+departDate);
         Label returnLabel = new Label("Return Date: "+ returnDate);
@@ -221,10 +259,26 @@ public class main extends Application {
         vBox.setPadding(new Insets(20,20,20,20));
 
         Button bookButton = new Button("Book");
+        Button backButton = new Button("Back");
 
-        vBox.getChildren().addAll(destLabel, departLabel, returnLabel, bookButton);
+        HBox hBox = new HBox(10);
+        hBox.getChildren().addAll(bookButton, backButton);
+
+
+        vBox.getChildren().addAll(destLabel, departLabel, returnLabel, hBox);
 
         borderPane.setCenter(vBox);
+
+        backButton.setOnAction(e -> {
+            try {
+                start(window);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
+        bookButton.setOnAction(e->{
+            registerCustomer(id, dest);
+        });
     }
 
     ListView<String> listView;
@@ -481,7 +535,7 @@ public class main extends Application {
             grid.getChildren().add(buttonHbox);
 
             scheduleFlight.setOnAction(d-> scheduleFlightMethod());
-            seeFlights.setOnAction(dick -> seeFlightsTable());
+            seeFlights.setOnAction(a -> seeFlightsTable());
         });
         planeButton.setOnAction(e -> {
             try {
@@ -808,12 +862,27 @@ public class main extends Application {
         });
     }
 
+    String pick = "";
     private void registerCustomer(int flightId, String dest){
         TextField fullnameField = new TextField();
         TextField passIDField = new TextField();
 
         Label nameLabel = new Label("Customer's Full Name: ");
         Label passIDLabel = new Label("Customer's Passport Number: ");
+        Label classLabel = new Label("Pick A Class: ");
+
+
+        ComboBox<String> box = new ComboBox<String>();
+        box.getItems().addAll("First Class", "Economy Class", "Coach Class");
+        box.setOnAction(e -> {
+            if(box.getValue().equals("First Class"))
+                pick = "first";
+            if(box.getValue().equals("Economy Class"))
+                pick = "economy";
+            if(box.getValue().equals("Coach Class"))
+                pick = "coach";
+        });
+        box.setEditable(false);
 
         Button bookButton = new Button("Book");
         Button backButton = new Button("Back");
@@ -832,8 +901,10 @@ public class main extends Application {
         grid.setConstraints(fullnameField, 1,0);
         grid.setConstraints(passIDLabel,0,1);
         grid.setConstraints(passIDField, 1,1);
+        grid.setConstraints(classLabel, 0,2);
+        grid.setConstraints(box, 1,2);
 
-        grid.getChildren().addAll(nameLabel, fullnameField, passIDField, passIDLabel);
+        grid.getChildren().addAll(nameLabel, fullnameField, passIDField, passIDLabel, box, classLabel);
 
         vBox.getChildren().addAll(grid, hBox);
 
@@ -843,33 +914,115 @@ public class main extends Application {
 
         backButton.setOnAction(e-> flightMatchHalf(dest));
         bookButton.setOnAction(e->{
+
+            planeDataBase planeDataBase = new planeDataBase();
+
+            int firstClassPlaneSeats = 0, economyClassPlaneSeats = 0, coachClassPlaneSeats = 0;
+
+            // now that we have seat number in a plane we need to see how many of the seats
+            // are taken inside a plane from a flight method
+
+            int fC = 0, eC = 0, cC = 0, plane = 0;
+            flightDataBase flightDataBase = new flightDataBase();
+            try {
+                Flight flight = flightDataBase.selectAFlight(flightId);
+                plane = flight.getPlane_id();
+                fC = flight.getFirstClass();
+                eC = flight.getEconomyClass();
+                cC = flight.getCoachClass();
+
+
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            try {
+                Plane planeObject = planeDataBase.getPlane(plane);
+                firstClassPlaneSeats = planeObject.getFirstClass();
+                economyClassPlaneSeats = planeObject.getEconomyClass();
+                coachClassPlaneSeats = planeObject.getCoachClass();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            System.out.println(firstClassPlaneSeats+" "+economyClassPlaneSeats+" "+coachClassPlaneSeats);
+            System.out.println(fC + " " + eC + " "+ cC);
+
             String name = fullnameField.getText();
             String passport = passIDField.getText();
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Booking Confirmation");
             alert.setHeaderText("Book a ticket");
             alert.setContentText("Are you sure?");
+            customerDataBase cdb = new customerDataBase();
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK){
-                // ... user chose OK
-                customerDataBase cdb = new customerDataBase();
-                try {
-                    cdb.setCustomer(name, passport, String.valueOf(flightId));
-                    Alert a = new Alert(Alert.AlertType.CONFIRMATION);
-                    a.setTitle("Customer Registered");
-                    a.setContentText("Customer has been registered successfully!");
-                    a.setHeaderText(null);
-                    a.show();
+                // ... user chooses OK
+                if(pick.equals("first") && firstClassPlaneSeats - fC != 0 ){
+                    // now we can say that we have seats available
+                    // and we can book a ticket in a first class
+                    try {
+                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        flightDataBase.setFlightFirstSeats(flightId);
+                        System.out.println("First Class works!");
+                        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                        a.setTitle("Customer Registered");
+                        a.setContentText("Customer has been registered successfully!");
+                        a.setHeaderText(null);
+                        a.show();
 
-                    Thread.sleep(1500);
-                    a.close();
+                        Thread.sleep(1500);
+                        a.close();
 
-                    flightMatchHalf(dest);
-                } catch (SQLException e1) {
-                    e1.printStackTrace();
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
+                        flightMatchHalf(dest);
+                    } catch (SQLException e1) {
+                        e1.printStackTrace();
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+
+
+                }
+                if (pick.equals("economy") && economyClassPlaneSeats - eC !=0){
+                    try {
+                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        flightDataBase.setFlightEconomySeats(flightId);
+                        System.out.println("First Class works!");
+                        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                        a.setTitle("Customer Registered");
+                        a.setContentText("Customer has been registered successfully!");
+                        a.setHeaderText(null);
+                        a.show();
+
+                        Thread.sleep(1500);
+                        a.close();
+
+                        flightMatchHalf(dest);
+                    } catch (SQLException e1) {
+                        e1.printStackTrace();
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+                if(pick.equals("coach") && coachClassPlaneSeats - cC !=0){
+                    try {
+                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        flightDataBase.setFlightCoachSeats(flightId);
+                        System.out.println("First Class works!");
+                        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                        a.setTitle("Customer Registered");
+                        a.setContentText("Customer has been registered successfully!");
+                        a.setHeaderText(null);
+                        a.show();
+
+                        Thread.sleep(1500);
+                        a.close();
+
+                        flightMatchHalf(dest);
+                    } catch (SQLException e1) {
+                        e1.printStackTrace();
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
                 }
             } else {
                 // employee choses cancel
