@@ -128,4 +128,55 @@ public class flightDataBase {
             e.printStackTrace();
         }
     }
+    public void cancelFlight(int flightID, String planeClass)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+
+            String update = String.format("UPDATE flights SET '%s' = '%s' -1 WHERE idFlights = '%d'", planeClass, planeClass, flightID);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelCoachFlight(int flightID)throws  SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+
+            String update = String.format("UPDATE flights SET coachClass = coachClass -1 WHERE idFlights = '%d'",flightID);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelFirstFlight(int flightID)throws  SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+
+            String update = String.format("UPDATE flights SET firstClass = firstClass -1 WHERE idFlights = '%d'",flightID);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelEconomyFlight(int flightID)throws  SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+
+            String update = String.format("UPDATE flights SET economyClass = economyClass -1 WHERE idFlights = '%d'",flightID);
+            s.executeUpdate(update);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -10,6 +10,44 @@ public class Employee {
     private String password;
     private String position;
     private int salary;
+    private String hometown;
+    private String country;
+    private String address;
+    private int zip;
+
+    public String getHometown() {
+        return hometown;
+    }
+
+    public void setHometown(String hometown) {
+        this.hometown = hometown;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public int getZip() {
+        return zip;
+    }
+
+    public void setZip(int zip) {
+        this.zip = zip;
+    }
+
+
 
     public int getIdEmployee() {
         return idEmployee;

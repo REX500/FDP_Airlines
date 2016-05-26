@@ -1,10 +1,13 @@
 package guiLayer;
 
+import applicationLayer.Customer;
 import applicationLayer.Employee;
 import applicationLayer.Flight;
 import applicationLayer.Plane;
 import com.sun.org.apache.bcel.internal.generic.RETURN;
+import com.sun.org.apache.xml.internal.dtm.ref.CustomStringPool;
 import dataBaseLayer.*;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,17 +20,21 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by Filip on 16-05-2016.
@@ -41,9 +48,12 @@ public class main extends Application {
     BorderPane borderPane;
     MenuBar menuBar;
     Scene scene;
-    Tab book;
+    Tab book, checkIn, flightStatus, myBooking;
     TabPane tabPane;
     int runCheck;
+    boolean closepopupwindow = true;
+    Stage popup;
+
     @Override
     public void start(Stage s)throws Exception{
 
@@ -51,32 +61,6 @@ public class main extends Application {
         window = s;
         borderPane = new BorderPane();
         borderPane.setId("pane-border");
-
-
-        // checking whether the app has been run for the first time
-
-        /*Scanner read = new Scanner(new File("Settings.txt"));
-        while(read.hasNext()){
-            String line = read.nextLine();
-            Scanner token = new Scanner(line);
-            while(token.hasNext()){
-                String run = token.next();
-                String equals = token.next();
-                int check = token.nextInt();
-                if (run.equals("Run") && check == 0) {
-                    // now we initialize the databases and tables
-                    // because the user has ran the program for the first time
-                    dbInit dataInit = new dbInit();
-                    dataInit.initialize();
-                    // when we are done with making all the databases we will overwrite the file so that the
-                    // run = 1
-                }
-            }
-        }
-        File output = new File("Settings.txt");
-        PrintWriter out = new PrintWriter(output);
-        out.print("Run = 1");
-        out.close();*/
 
         Menu file = new Menu("File");
         Menu edit = new Menu("Edit");
@@ -130,9 +114,9 @@ public class main extends Application {
         //making a tabpane bellow
 
         book = new Tab("Book A Ticket");
-        Tab myBooking = new Tab("My Booking");
-        Tab checkIn = new Tab("Check in");
-        Tab flightStatus = new Tab("Fight Status");
+        myBooking = new Tab("My Booking");
+        checkIn = new Tab("Check in");
+        flightStatus = new Tab("Flight Status");
 
         // making a contect for the booking tab
         // adding a search bar, search button and a calendar
@@ -229,6 +213,9 @@ public class main extends Application {
         tabPane.getTabs().addAll(book, myBooking, checkIn, flightStatus);
         //disabling the closing property
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        checkIntMethod();
+        flightStatus();
+        myBooking();
 
         borderPane.setCenter(tabPane);
 
@@ -241,11 +228,14 @@ public class main extends Application {
             }
         });
 
-        scene = new Scene(borderPane, 770,600);
-        scene.getStylesheets().add("Airline.css");
+        scene = new Scene(borderPane, 750,600);
+        window.setMaxWidth(750);
+        window.setMaxHeight(600);
+        window.setMaxWidth(750);
+        window.setMinHeight(600);
+        scene.getStylesheets().add("style.css");
         window.setScene(scene);
         window.show();
-
     }
 
     //method that displays the flight
@@ -317,6 +307,13 @@ public class main extends Application {
             int flightId = flightArrayList.get(realV).getIdFlights();
 
             registerCustomer(flightId, dest);
+        });
+        back.setOnAction(e -> {
+            try {
+                start(window);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         });
 
         borderPane.setCenter(vBox);
@@ -473,11 +470,7 @@ public class main extends Application {
 
         //adding action listeners to the buttons
         back.setOnAction(e-> {
-            try {
-                start(window);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            employeeView();
         });
 
         labelVbox.getChildren().addAll(planeId, planeName, planeFclass, planeEclass, planeCclass);
@@ -498,45 +491,153 @@ public class main extends Application {
     }
 
     private void employeeView(){
+        /**
+         It locks here the size of the stage (window) and the scaleability. The login screen is still able to resize but
+         the employeeview screen is not. If you change the size of the employeeview screen, then you need to change the
+         icon's place too.
+         */
+
+        window.setMaxHeight(625);
+        window.setMaxWidth(650);
+        window.setMinHeight(600);
+        window.setMinWidth(625);
+        window.setResizable(false);
+        window.centerOnScreen();
+        menuBar.setId("menuBar");
+
         GridPane grid = new GridPane();
-        Button flightButton = new Button("Flights");
-        Button planeButton = new Button("Planes");
-        Button customerButton = new Button("Customers");
-        Button employeeButton = new Button("Employee's");
-        Button helpButton = new Button("Help");
+        Button flightButton = new Button();
+        Button planeButton = new Button();
+        Button customerButton = new Button();
+        Button employeeButton = new Button();
+        Button helpButton = new Button("HELP");
 
-        Label flightLabel = new Label("Flights");
-        Label planeLabel = new Label("Planes");
-        Label custoLabel = new Label("Customers");
-        Label empLabel = new Label("Employee's");
+        /**
+         * ButtonIDs for the CSS. ( style.css )
+         */
 
-        grid.setConstraints(flightLabel, 0,0);
-        grid.setConstraints(planeLabel,1,0);
-        grid.setConstraints(flightButton, 0,1);
-        grid.setConstraints(planeButton, 1,1);
-        grid.setConstraints(custoLabel, 0,2);
-        grid.setConstraints(empLabel,1,2);
-        grid.setConstraints(customerButton, 0,3);
-        grid.setConstraints(employeeButton,1,3);
-        grid.setConstraints(helpButton, 1,4);
+        flightButton.setId("flightButton");
+        planeButton.setId("planeButton");
+        customerButton.setId("customerButton");
+        employeeButton.setId("employeeButton");
+        helpButton.setId("helpB");
+        grid.setId("gridId");
 
-        grid.setHgap(8);
+        /**
+         * Resize the icons. We need to keep them on this size because we have 200x200 pictures.
+         */
+
+        flightButton.setPrefSize(200,200);
+        planeButton.setPrefSize(200,200);
+        customerButton.setPrefSize(200,200);
+        employeeButton.setPrefSize(200,200);
+        helpButton.setPrefSize(100,70);
+
+
+        Label flightLabel = new Label("   Flights");
+        Label planeLabel = new Label("   Planes");
+        Label custoLabel = new Label("  Customers");
+        Label empLabel = new Label("  Employee's");
+
+        /**
+         * ID-s to CSS. (Not used yet.)
+         */
+
+        flightLabel.setId("fl");
+        planeLabel.setId("pl");
+        custoLabel.setId("cl");
+        empLabel.setId("el");
+
+        grid.setConstraints(flightLabel, 3,0);
+        grid.setConstraints(empLabel,19,2);
+        grid.setConstraints(planeLabel,19,0);
+        grid.setConstraints(custoLabel, 3,2);
+        grid.setConstraints(flightButton, 3,1);
+        grid.setConstraints(planeButton, 19,1);
+        grid.setConstraints(customerButton, 3,4);
+        grid.setConstraints(employeeButton,19,4);
+        grid.setConstraints(helpButton, 10,6);
+        grid.setPadding(new Insets(10,10,10,10));
+        grid.setHgap(5);
         grid.setVgap(10);
         grid.getChildren().addAll(flightButton, flightLabel, planeButton, planeLabel, custoLabel, customerButton, empLabel, employeeButton, helpButton);
 
         //adding action listeners to the button
-        flightButton.setOnAction(e->{
-            Button seeFlights = new Button("Show");
-            Button scheduleFlight = new Button("Schedule");
 
-            HBox buttonHbox = new HBox(2);
-            buttonHbox.getChildren().addAll(seeFlights, scheduleFlight);
-            grid.setConstraints(buttonHbox, 0,1);
-            grid.getChildren().add(buttonHbox);
+        flightButton.setOnAction(e->
+                {
+                    popup = new Stage();
+                    popup.initStyle(StageStyle.UNDECORATED);
+                    popup.initModality(Modality.APPLICATION_MODAL);
+                    popup.initOwner(window);
+                    popup.centerOnScreen();
+                    HBox popupHbox = new HBox(0);
+                    Scene popupScene = new Scene(popupHbox, 400, 200);
+                    popup.setScene(popupScene);
+                    popupScene.getStylesheets().add("style.css");
+                    popup.show();
 
-            scheduleFlight.setOnAction(d-> scheduleFlightMethod());
-            seeFlights.setOnAction(a -> seeFlightsTable());
-        });
+                    /**
+                     * ID for the CSS.
+                     */
+                    popupHbox.setId("popupHbox");
+
+                    Button seeFlights = new Button();
+                    Button scheduleFlight = new Button();
+
+                    popupHbox.getChildren().addAll(seeFlights, scheduleFlight);
+
+                    /**
+                     * It is the timer to close the popup window. We have inside the IF statment a boolean(closepopupwindow), what
+                     * was created at the beginning of the object, and here we call it. If it's true then close the window.
+                     */
+
+                    PauseTransition delay = new PauseTransition(Duration.seconds(5));
+                    delay.setOnFinished(event ->
+                    {
+                        if (closepopupwindow)
+                            popup.close();
+
+
+                    });
+                    delay.play();
+
+                    /**
+                     * ID-s for CSS. ( style.css )
+                     */
+
+                    seeFlights.setId("seeFlights");
+                    scheduleFlight.setId("scheduleFlight");
+
+                    /**
+                     * Resize the icons.
+                     */
+
+                    seeFlights.setPrefSize(200, 200);
+                    scheduleFlight.setPrefSize(200, 200);
+
+
+                    HBox buttonHbox = new HBox(2);
+                    buttonHbox.getChildren().addAll();
+                    grid.setConstraints(buttonHbox, 0, 1);
+                    grid.getChildren().add(buttonHbox);
+
+                    /**
+                     *If you click to the scheduleFlight and change the closepopupwindow to false, what makes the screen keep working.
+                     */
+
+                    scheduleFlight.setOnAction(d ->
+                    {
+                        closepopupwindow = false;
+                        scheduleFlightMethod(popupHbox);
+                    });
+
+                    seeFlights.setOnAction(event -> {
+                        popup.close();
+                        seeFlightsTable();
+                    });
+                });
+
         planeButton.setOnAction(e -> {
             try {
                 seePlanes();
@@ -556,15 +657,20 @@ public class main extends Application {
         borderPane.setTop(menuBar);
     }
 
+
     ArrayList<Flight> flightArrayList;
     int realId=0;
-    private void scheduleFlightMethod(){
+    private void scheduleFlightMethod(Pane pane){
+
+        /**
+         * It clears the popup screen and overwrite with the new labels buttons and boxes. Works like the previous GridPane ( grid ).
+         */
+        pane.getChildren().clear();
+        pane.getStylesheets().add("scheduleFlight.css");
+
         ComboBox<String> planesComboBox = new ComboBox<String>();
         planesComboBox.getItems().addAll("Airbus 319","Airbus 320","Boeing 747","Boeing 777","Dash 8-Q400");
         planesComboBox.setEditable(false);
-
-
-
 
         planesComboBox.setOnAction(event -> {
             if(planesComboBox.getValue().equals("Airbus 319"))
@@ -613,9 +719,26 @@ public class main extends Application {
 
 
         grid.getChildren().addAll(label1, label2, label3,text2, text3, backButton, checkButton,planesComboBox);
-        borderPane.setCenter(grid);
 
-        backButton.setOnAction(e-> employeeView());
+        if(pane instanceof BorderPane )
+            ((BorderPane)pane).setCenter(grid);
+
+        else
+            pane.getChildren().add(grid);
+
+        /**
+         * Action to Back button and put us back to the first screen.
+         */
+        backButton.setOnAction(e->
+        {
+            try {
+                popup.close();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+        });
+
 
         checkButton.setOnAction(e->{
             String fromDate = text2.getText();
@@ -815,6 +938,7 @@ public class main extends Application {
         return employeeObservableList;
     }
 
+    int moreInfoCheck = 0;
     private void employeeInfo(int id, String fname, String lname, String pos, String pass, int sal){
         // in this method we will display all the employee info
         Label idLabel = new Label("Employee ID: "+ id);
@@ -840,14 +964,13 @@ public class main extends Application {
 
         Button back = new Button("Back");
         Button moreInfo = new Button("More Info");
-        Button changeInfo = new Button("Change Info");
 
         HBox mainHbox = new HBox(10);
         VBox labelVbox = new VBox(8);
         VBox btnVbox = new VBox(10);
 
         labelVbox.getChildren().addAll(idLabel, fLabel, lLabel, posLabel, salLabel, passLabel);
-        btnVbox.getChildren().addAll(moreInfo, changeInfo, back);
+        btnVbox.getChildren().addAll(moreInfo, back);
 
         mainHbox.getChildren().addAll(iv2, labelVbox, btnVbox);
 
@@ -858,6 +981,36 @@ public class main extends Application {
                 employeesMethod();
             } catch (SQLException e1) {
                 e1.printStackTrace();
+            }
+        });
+
+        moreInfo.setOnAction(e->{
+            if(moreInfoCheck==1){
+                employeeInfo(id, fname, lname, pos, pass, sal);
+                moreInfoCheck--;
+            }
+            else {
+                employeeAddressDataBase addressDataBase = new employeeAddressDataBase();
+                Employee employee = null;
+                try {
+                    employee = addressDataBase.getAddressInfo(id, fname, lname, pass, pos, sal);
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+                Label countryLabel = new Label("Country: " + employee.getCountry());
+                Label hometownLabel = new Label("Hometown: " + employee.getHometown());
+                Label addressLabel = new Label("Address: " + employee.getAddress());
+                Label zipLabel = new Label("Zip: " + employee.getZip());
+
+                VBox addInfoBox = new VBox(8);
+
+                addInfoBox.getChildren().addAll(countryLabel, hometownLabel, addressLabel, zipLabel);
+                addInfoBox.setPadding(new Insets(0, 0, 0, 0));
+
+                labelVbox.getChildren().add(addInfoBox);
+
+                moreInfo.setText("Less Info");
+                moreInfoCheck++;
             }
         });
     }
@@ -955,18 +1108,19 @@ public class main extends Application {
             customerDataBase cdb = new customerDataBase();
 
             Optional<ButtonType> result = alert.showAndWait();
+            int errorCheck = 0;
             if (result.get() == ButtonType.OK){
                 // ... user chooses OK
                 if(pick.equals("first") && firstClassPlaneSeats - fC != 0 ){
                     // now we can say that we have seats available
                     // and we can book a ticket in a first class
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        cdb.setCustomer(name, passport, String.valueOf(flightId), "first");
                         flightDataBase.setFlightFirstSeats(flightId);
-                        System.out.println("First Class works!");
+
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
                         a.setTitle("Customer Registered");
-                        a.setContentText("Customer has been registered successfully!");
+                        a.setContentText("Customer has been registered successfully!\nFlight ID is: "+flightId);
                         a.setHeaderText(null);
                         a.show();
 
@@ -979,17 +1133,24 @@ public class main extends Application {
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
-
-
+                    errorCheck++;
+                }
+                else if(errorCheck == 0){
+                    Alert alba = new Alert(Alert.AlertType.INFORMATION);
+                    alba.setTitle("No Space Available");
+                    alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the first class");
+                    alba.setHeaderText(null);
+                    alba.showAndWait();
+                    errorCheck++;
                 }
                 if (pick.equals("economy") && economyClassPlaneSeats - eC !=0){
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        cdb.setCustomer(name, passport, String.valueOf(flightId), "economy");
                         flightDataBase.setFlightEconomySeats(flightId);
                         System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
                         a.setTitle("Customer Registered");
-                        a.setContentText("Customer has been registered successfully!");
+                        a.setContentText("Customer has been registered successfully!\nFlight ID is: "+flightId);
                         a.setHeaderText(null);
                         a.show();
 
@@ -1002,15 +1163,24 @@ public class main extends Application {
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
+                    errorCheck++;
+                }
+                else if(errorCheck == 0){
+                    Alert alba = new Alert(Alert.AlertType.INFORMATION);
+                    alba.setTitle("No Space Available");
+                    alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the economy class");
+                    alba.setHeaderText(null);
+                    alba.showAndWait();
+                    errorCheck++;
                 }
                 if(pick.equals("coach") && coachClassPlaneSeats - cC !=0){
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId));
+                        cdb.setCustomer(name, passport, String.valueOf(flightId), "coach");
                         flightDataBase.setFlightCoachSeats(flightId);
                         System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
                         a.setTitle("Customer Registered");
-                        a.setContentText("Customer has been registered successfully!");
+                        a.setContentText("Customer has been registered successfully!\nFlight ID is: "+flightId);
                         a.setHeaderText(null);
                         a.show();
 
@@ -1023,7 +1193,17 @@ public class main extends Application {
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
+                    errorCheck++;
                 }
+                else if(errorCheck == 0){
+                    Alert alba = new Alert(Alert.AlertType.INFORMATION);
+                    alba.setTitle("No Space Available");
+                    alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the coach class");
+                    alba.setHeaderText(null);
+                    alba.showAndWait();
+                    errorCheck++;
+                }
+                errorCheck--;
             } else {
                 // employee choses cancel
 
@@ -1065,7 +1245,15 @@ public class main extends Application {
         flightTable.getColumns().addAll(flightID, flightPlaneId, flightDestination, flightExpected, flightOnBoard, flightReturn, flightFrom);
         flightTable.setItems(getFlights());
 
-        borderPane.setCenter(flightTable);
+        VBox vBox = new VBox(10);
+
+        Button backButton = new Button("Back");
+
+        vBox.getChildren().addAll(flightTable, backButton);
+
+        borderPane.setCenter(vBox);
+
+        backButton.setOnAction(e-> employeeView());
     }
 
     public ObservableList<Flight> getFlights(){
@@ -1081,5 +1269,358 @@ public class main extends Application {
             flightObservableList.add(flightList.get(i));
         }
         return flightObservableList;
+    }
+    ArrayList<Customer> customers;
+    ArrayList<Flight> flights;
+    private void checkIntMethod(){
+        customerDataBase customerDataBase = new customerDataBase();
+        flightDataBase flightDataBase = new flightDataBase();
+
+        customers = new ArrayList<>();
+        flights = new ArrayList<>();
+
+        try {
+            customers = customerDataBase.getCustomers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            flights = flightDataBase.getFlights();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        Label passLabel = new Label("Passport ID: ");
+        Label flightIdLabel = new Label("Flight ID: ");
+
+        TextField passText = new TextField();
+        passText.setPromptText("Enter Passport ID");
+        TextField flightIdText = new TextField();
+        flightIdText.setPromptText("Enter Flight ID");
+
+        Button checkInButton = new Button("Check In");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setConstraints(passLabel, 0,0);
+        grid.setConstraints(passText , 1,0);
+        grid.setConstraints(flightIdLabel, 0,1);
+        grid.setConstraints(flightIdText, 1,1);
+
+        grid.getChildren().addAll(passLabel, passText, flightIdLabel, flightIdText);
+
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(grid, checkInButton);
+        vBox.setPadding(new Insets(10,10,10,10));
+
+        checkInButton.setOnAction(e->{
+            int check = 0;
+            for(int i = 0 ; i < customers.size(); i++){
+                int flightID = Integer.parseInt(customers.get(i).getFlightId());
+                for(int j = 0 ; j < flights.size(); j++){
+                    if(flightID == flights.get(j).getIdFlights()){
+                        Alert a = new Alert(Alert.AlertType.INFORMATION);
+                        a.setTitle("Check-In Successful");
+                        String info = "Welcome "+customers.get(i).getName()+"\nDestination: "+flights.get(j).getDestination()+"\nYou have checked in successfully!";
+                        a.setContentText(info);
+                        a.setHeaderText(null);
+                        a.showAndWait();
+                        check++;
+                        break;
+                    }
+                    if(customers.size() - i == 1){
+                        Alert a = new Alert(Alert.AlertType.ERROR);
+                        a.setTitle("Check In Error");
+                        a.setContentText("Please check your log in data and try again!");
+                        a.setHeaderText(null);
+                        a.showAndWait();
+                    }
+                }
+                if(check == 1)
+                    break;
+            }
+            passText.clear();
+            flightIdText.clear();
+        });
+        checkIn.setContent(vBox);
+    }
+
+    int flightCheck = 0;
+    private void flightStatus()throws SQLException{
+        Label flightIdLabel = new Label("Enter Flight ID: ");
+        TextField flightText = new TextField();
+        flightText.setPromptText("Enter ID");
+        Button checkButton = new Button("Check");
+
+        VBox mainBox = new VBox(10);
+        HBox hBox = new HBox(10);
+
+        hBox.getChildren().addAll(flightIdLabel, flightText);
+
+        mainBox.getChildren().addAll(hBox, checkButton);
+
+        flightStatus.setContent(mainBox);
+
+
+        Label label = new Label();
+        Label label1 = new Label();
+        Label label2 = new Label();
+
+        VBox labelv = new VBox(10);
+        labelv.getChildren().addAll(label, label1, label2);
+
+        mainBox.getChildren().add(labelv);
+
+        checkButton.setOnAction(e->{
+
+            int flightId = Integer.parseInt(flightText.getText());
+
+            planeDataBase planeDataBase = new planeDataBase();
+
+            int firstClassPlaneSeats = 0, economyClassPlaneSeats = 0, coachClassPlaneSeats = 0;
+
+            // now that we have seat number in a plane we need to see how many of the seats
+            // are taken inside a plane from a flight method
+
+            int fC = 0, eC = 0, cC = 0, plane = 0;
+            flightDataBase flightDataBase = new flightDataBase();
+            try {
+                Flight flight = flightDataBase.selectAFlight(flightId);
+                plane = flight.getPlane_id();
+                fC = flight.getFirstClass();
+                eC = flight.getEconomyClass();
+                cC = flight.getCoachClass();
+
+
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            try {
+                Plane planeObject = planeDataBase.getPlane(plane);
+                firstClassPlaneSeats = planeObject.getFirstClass();
+                economyClassPlaneSeats = planeObject.getEconomyClass();
+                coachClassPlaneSeats = planeObject.getCoachClass();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+
+            //
+
+            int fClassSpaces=0, cClassSpaces = 0, eClassSpaces=0;
+
+            fClassSpaces = firstClassPlaneSeats - fC;
+            cClassSpaces = coachClassPlaneSeats - cC;
+            eClassSpaces = economyClassPlaneSeats - eC;
+
+            String text1 = "First Class has "+fClassSpaces+" spaces left";
+            String text2 = "Economy Class has "+eClassSpaces+" spaces left";
+            String text3 = "Coach Class has "+ cClassSpaces+" spaces left";
+
+            label.setText(text1);
+            label1.setText(text2);
+            label2.setText(text3);
+
+
+
+        });
+    }
+
+    ListView<String> bookingView;
+    private void myBooking(){
+        TextField bookingText = new TextField();
+        Label bookingLabel = new Label("Enter your passport ID to see all of the previous bookings: ");
+        Button checkButton = new Button("Check");
+        Button cancelButton = new Button("Cancel Ticket");
+
+        HBox hBox = new HBox(10);
+        hBox.getChildren().addAll(bookingLabel, bookingText);
+        HBox btnBox = new HBox(10);
+        btnBox.getChildren().addAll(checkButton, cancelButton);
+
+        bookingView = new ListView<>();
+        VBox mainBox = new VBox(10);
+        mainBox.getChildren().addAll(hBox, btnBox, bookingView);
+
+        customerDataBase customerDataBase = new customerDataBase();
+        customers = new ArrayList<>();
+
+        try {
+            customers = customerDataBase.getCustomers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        checkButton.setOnAction(e->{
+            String passId = bookingText.getText();
+
+            for(int i = 0 ; i < customers.size(); i++){
+                if(passId.equals(customers.get(i).getPassId())){
+                    String text ="Name: "+ customers.get(i).getName()+" Passport ID: "+customers.get(i).getPassId()+" Flight ID:  "+customers.get(i).getFlightId()+" Class: "+customers.get(i).getPlaneClass();
+                    bookingView.getItems().add(text);
+                }
+            }
+        });
+        cancelButton.setOnAction(e-> cancelMethod());
+
+
+        myBooking.setContent(mainBox);
+    }
+
+    private void cancelMethod(){
+        Label label = new Label("Enter your passport ID: ");
+        Label label1 = new Label("Enter flight ID that you want to cancel: ");
+
+        TextField text1 = new TextField();
+        TextField text2 = new TextField();
+
+        Button cancelButton = new Button("Proceed");
+        Button backButton = new Button("Back");
+
+        text1.setPromptText("Enter pass ID");
+        text2.setPromptText("Enter Flight ID");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(10);
+
+        grid.setConstraints(label, 0,0);
+        grid.setConstraints(text1,1,0);
+        grid.setConstraints(label1, 0,1);
+        grid.setConstraints(text2,1,1);
+
+        grid.getChildren().addAll(label, label1, text1, text2);
+
+        VBox vBox = new VBox(10);
+        HBox hBox = new HBox(10);
+        hBox.getChildren().addAll(cancelButton, backButton);
+
+        vBox.getChildren().addAll(grid, hBox);
+
+
+        customerDataBase customerDataBase = new customerDataBase();
+        customers = new ArrayList<>();
+
+        try {
+            customers = customerDataBase.getCustomers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        cancelButton.setOnAction(e->{
+            String passId = text1.getText();
+            String flightID = text2.getText();
+
+            for(int i = 0 ; i < customers.size(); i++){
+                if(passId.equals(customers.get(i).getPassId()) && customers.get(i).getFlightId().equals(flightID)){
+                    String name = customers.get(i).getName();
+                    String fID = customers.get(i).getFlightId();
+                    String passID = customers.get(i).getPassId();
+                    String planeClass = customers.get(i).getPlaneClass();
+
+                    String dbClassName = planeClass+"Class";
+
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Are You Sure");
+                    alert.setHeaderText("Are you sure you want to cancel your ticket?");
+                    alert.setContentText("Press OK to cancel");
+
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.get() == ButtonType.OK){
+                        flightDataBase flightDataBase = new flightDataBase();
+                        if(planeClass.equals("coach")) {
+                            try {
+                                flightDataBase.cancelCoachFlight(Integer.parseInt(fID));
+                            } catch (SQLException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                        else if(planeClass.equals("first")){
+                            try {
+                                flightDataBase.cancelFirstFlight(Integer.parseInt(fID));
+                            } catch (SQLException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                        else{
+                            try {
+                                flightDataBase.cancelEconomyFlight(Integer.parseInt(fID));
+                            } catch (SQLException e1) {
+                                e1.printStackTrace();
+                            }
+                            // now that we canceled the ticket we need to compare the dates
+                            // to see whether the customer gets a full or half refund
+
+                            try {
+                                flights = flightDataBase.getFlights();
+                            } catch (SQLException e1) {
+                                e1.printStackTrace();
+                            }
+                            String stringDate= "";
+                            for(int j = 0 ; j < flights.size(); j++){
+                                if(fID.equals(String.valueOf(flights.get(j).getIdFlights()))){
+                                    stringDate = flights.get(j).getFromDate();
+                                    break;
+                                }
+                            }
+
+                            System.out.println(stringDate);
+
+
+                            Date date2 = new Date();
+                            DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                            try {
+                                date2 = format.parse(stringDate);
+                            } catch (ParseException e1) {
+                                e1.printStackTrace();
+                            }
+                            System.out.println(date2);
+
+                            Date date = new Date();
+
+                            Calendar cal = new GregorianCalendar();
+                            cal.setTime(date);
+                            int weeks = 0;
+                            while (cal.getTime().before(date2)) {
+                                // add another week
+                                cal.add(Calendar.WEEK_OF_YEAR, 1);
+                                weeks++;
+                            }
+
+                            System.out.println("Number of weeks: "+weeks);
+
+                            if(weeks>2){
+                                Alert a = new Alert(Alert.AlertType.INFORMATION);
+                                a.setTitle("Good News");
+                                a.setContentText("You have "+weeks+" weeks to your flight \nWhich means that you will get a full refund!");
+                                a.setHeaderText(null);
+                                a.showAndWait();
+                            }
+                            else{
+                                Alert a = new Alert(Alert.AlertType.INFORMATION);
+                                a.setTitle("Bad News");
+                                a.setContentText("You have "+weeks+" weeks to your flight \nWhich means that you wont get a full refund!");
+                                a.setHeaderText(null);
+                                a.showAndWait();
+                            }
+                        }
+                    }
+                    else {
+                        // ... user chose CANCEL or closed the dialog
+                    }
+                    break;
+                }
+            }
+        });
+        backButton.setOnAction(e -> {
+            try {
+                start(window);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        });
+
+        borderPane.setCenter(vBox);
     }
 }
