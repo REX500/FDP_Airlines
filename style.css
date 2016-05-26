@@ -1,0 +1,118 @@
+#helpB
+{
+    -fx-text-fill: white;
+    -fx-font-family: "Arial Narrow";
+    -fx-font-weight: bold;
+    -fx-background-color: linear-gradient(#61a2b1, #2A5058);
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+#helpB:hover
+{
+    -fx-background-color: linear-gradient(#2A5058, #61a2b1);
+}
+
+#popupHbox
+{
+    -fx-border-color: black;
+    -fx-border-insets: 0;
+    -fx-border-width: 0;
+    -fx-border-style: solid;
+}
+
+#scheduleFlight
+{
+    -fx-background-image: url('/guiLayer/schedule_icon200x200.png');
+    -fx-border-color: grey ;
+    -fx-border-width: 0.3cm;
+}
+
+
+#seeFlights
+{
+    -fx-background-image: url('/guiLayer/showtable_icon200x200.jpg');
+    -fx-border-color: grey;
+    -fx-border-width: 0.2cm;
+}
+
+#flightButton
+{
+    -fx-background-image: url('/guiLayer/flight_icon200x200.png');
+    -fx-border-color: gray;
+    -fx-border-width: 0.2cm;
+}
+#planeButton
+{
+    -fx-background-image: url('/guiLayer/plane_icon200x200.png');
+    -fx-border-color: gray ;
+    -fx-border-width: 0.2cm;
+}
+#customerButton
+{
+    -fx-background-image: url('/guiLayer/customer_icon200x200.png');
+    -fx-border-color: gray ;
+    -fx-border-width: 0.2cm;
+}
+#employeeButton
+{
+    -fx-background-image: url('/guiLayer/employee_icon200x200.png');
+    -fx-border-color: gray ;
+    -fx-border-width: 0.2cm;
+}
+#gridId
+{
+    -fx-background-color: #dedede;
+}
+
+.text-input{
+    -fx-background-color: #D80000 ;
+    -fx-background-insets: 0 -1 -1 -1, 0 0 0 0, 0 -1 3 -1;
+}
+
+
+#text-search{
+    -fx-font-size: 20pt;
+    -fx-font-family: "Comic Sans MS", cursive, sans-serif;
+
+}
+.label{
+    -fx-font-size: 10pt;
+    -fx-font-family: "Arial Black", Gadget, sans-serif;
+}
+#bar-menu{
+    -fx-font-size: 10pt;
+    -fx-font-family: "Arial Black", Gadget, sans-serif;
+}
+
+#pane-border{
+    -fx-background-image: url("backround.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-size: 770 480;
+    -fx-background-position: center center;
+    -fx-effect: dropshadow(three-pass-box, black, 30, 0.5, 0, 0);
+}
+
+#in-sign{
+    -fx-opacity: 0.4;
+    -fx-background-color: #1d1d1d;
+    -fx-text-fill: white;
+}
+
+#button-search{
+    -fx-opacity: 0.4;
+    -fx-background-color: #1d1d1d;
+    -fx-text-fill: white;
+}
+#logoutbutton
+{
+    -fx-text-fill: white;
+    -fx-font-family: "Arial Narrow";
+    -fx-font-weight: bold;
+    -fx-background-color: linear-gradient(#61a2b1, #2A5058);
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+#logoutbutton:hover
+{
+    -fx-background-color: linear-gradient(#2A5058, #61a2b1);
+}

@@ -29,6 +29,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -57,6 +58,8 @@ public class main extends Application {
     @Override
     public void start(Stage s)throws Exception{
 
+
+        initialize();
 
         window = s;
         borderPane = new BorderPane();
@@ -141,24 +144,25 @@ public class main extends Application {
 
         HBox calendar = new HBox(100);
         calendar.getChildren().addAll(datePickerFrom, datePickerTo);
+        calendar.setPadding(new Insets(10,10,10,140));
 
 
         HBox labelBox = new HBox(180);
         Label labelFrom = new Label("Departure Date");
         Label labelReturn = new Label("Return Date");
         labelBox.getChildren().addAll(labelFrom, labelReturn);
+        labelBox.setPadding(new Insets(0,0,0,155));
 
         HBox btnBox = new HBox();
-        btnBox.setPadding(new Insets(230,10,10,610));
+        btnBox.setPadding(new Insets(200,20,10,610));
         btnBox.getChildren().addAll(searchButton);
+        searchButton.setMinWidth(150);
 
         searchButton.setPadding(new Insets(15,50,15,50));
         vBox.getChildren().addAll(searchText,labelBox,calendar, btnBox);
 
-
-
-
         book.setContent(vBox);
+
         searchButton.setOnAction(e-> {
             String searchedDestination = searchText.getText();
             LocalDate datePicFrom = datePickerFrom.getValue();
@@ -176,30 +180,24 @@ public class main extends Application {
             int secondYear = datePicTo.getYear();
             String realSecondDate = secondDay+"/"+secondMonth+"/"+secondYear;
 
-            ArrayList<Flight> flightList = new ArrayList<Flight>();
             // now when we have dates we need to search if the actual flight in that date exists
-            flightDataBase flightDataBase = new flightDataBase();
-            try {
-                flightList = flightDataBase.getFlights();
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            for(int i= 0 ; i < flightList.size(); i++){
+
+            for(int i= 0 ; i < flights.size(); i++){
                 // here we check if all three parameters match
-                if(searchedDestination.equals(flightList.get(i).getDestination()) && realFirstDate.equals(flightList.get(i).getFromDate()) && realSecondDate.equals(flightList.get(i).getReturnDate())){
+                if(searchedDestination.equals(flights.get(i).getDestination()) && realFirstDate.equals(flights.get(i).getFromDate()) && realSecondDate.equals(flights.get(i).getReturnDate())){
                     // now that it matches we do something with it
                     // we make a view with the flight
-                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate, flightList.get(i).getIdFlights());
+                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate, flights.get(i).getIdFlights());
                     break;
                 }
                 // if destination match
-                if(searchedDestination.equals(flightList.get(i).getDestination())){
+                if(searchedDestination.equals(flights.get(i).getDestination())){
                     // here only the destination will match
                     flightMatchHalf(searchedDestination);
                     break;
                 }
                 // if there isnt a flight to that country at all
-                if(flightList.size() - i ==1){
+                if(flights.size() - i ==1){
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("No Flights Found");
                     alert.setContentText("We are sorry but we didnt manage to find any flight to the desired country");
@@ -209,10 +207,13 @@ public class main extends Application {
             }
         });
 
+
         tabPane = new TabPane();
         tabPane.getTabs().addAll(book, myBooking, checkIn, flightStatus);
         //disabling the closing property
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+
+
         checkIntMethod();
         flightStatus();
         myBooking();
@@ -228,16 +229,44 @@ public class main extends Application {
             }
         });
 
-        scene = new Scene(borderPane, 750,600);
-        window.setMaxWidth(750);
+        scene = new Scene(borderPane, 770,600);
+        window.setMaxWidth(770);
         window.setMaxHeight(600);
-        window.setMaxWidth(750);
+        window.setMaxWidth(770);
         window.setMinHeight(600);
         scene.getStylesheets().add("style.css");
         window.setScene(scene);
         window.show();
+
     }
 
+    customerDataBase customerDataBase;
+    employeeAddressDataBase employeeAddressDataBase;
+    employeeDataBase employeeDataBase;
+    planeDataBase planeDataBase;
+    flightDataBase flightDataBase;
+
+    ArrayList<Customer> customers;
+    ArrayList<Plane> planes;
+    ArrayList<Flight> flights;
+    ArrayList<Employee> employees;
+
+    private  void initialize(){
+        customerDataBase = new customerDataBase();
+        employeeDataBase = new employeeDataBase();
+        employeeAddressDataBase = new employeeAddressDataBase();
+        planeDataBase = new planeDataBase();
+        flightDataBase = new flightDataBase();
+
+        try {
+            customers = customerDataBase.getCustomers();
+            planes = planeDataBase.getPlanes();
+            flights = flightDataBase.getFlights();
+            employees = employeeDataBase.getEmployee();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     //method that displays the flight
 
     private void flightMatchesView(String dest, String departDate, String returnDate, int id){
@@ -274,16 +303,10 @@ public class main extends Application {
     ListView<String> listView;
     private void flightMatchHalf(String dest){
         listView = new ListView<>();
-        flightDataBase fdb = new flightDataBase();
-        try {
-            flightArrayList = fdb.getFlights();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
-        for(int i = 0 ; i < flightArrayList.size(); i++){
-            if(dest.equals(flightArrayList.get(i).getDestination())){
-                String view =(i+1)+". "+ flightArrayList.get(i).getDestination()+","+flightArrayList.get(i).getFromDate()+","+flightArrayList.get(i).getReturnDate();
+        for(int i = 0 ; i < flights.size(); i++){
+            if(dest.equals(flights.get(i).getDestination())){
+                String view =(i+1)+". "+ flights.get(i).getDestination()+","+flights.get(i).getFromDate()+","+flights.get(i).getReturnDate();
                 listView.getItems().add(view);
             }
         }
@@ -304,7 +327,7 @@ public class main extends Application {
             int value = Integer.parseInt(String.valueOf(v));
             System.out.println(value);
             int realV = value -1;
-            int flightId = flightArrayList.get(realV).getIdFlights();
+            int flightId = flights.get(realV).getIdFlights();
 
             registerCustomer(flightId, dest);
         });
@@ -317,6 +340,52 @@ public class main extends Application {
         });
 
         borderPane.setCenter(vBox);
+    }
+
+    // method that has the table with the customers
+
+    TableView<Customer> customerTable;
+    private void customerTable() throws SQLException {
+        TableColumn<Customer, Integer> custoID = new TableColumn<>("Customer ID");
+        custoID.setMinWidth(100);
+        custoID.setCellValueFactory(new PropertyValueFactory<>("id"));
+
+        TableColumn<Customer, String> custoName = new TableColumn<>("Customer Name");
+        custoName.setMinWidth(100);
+        custoName.setCellValueFactory(new PropertyValueFactory<>("name"));
+
+        TableColumn<Customer, String> custoPass = new TableColumn<>("Passport ID");
+        custoPass.setMinWidth(150);
+        custoPass.setCellValueFactory(new PropertyValueFactory<>("passId"));
+
+        TableColumn<Customer, Integer> custoFlightID = new TableColumn<>("Customer Flight ID");
+        custoFlightID.setMinWidth(100);
+        custoFlightID.setCellValueFactory(new PropertyValueFactory<>("flightId"));
+
+        TableColumn<Customer, String> custoPlaneClass = new TableColumn<>("Customer Plane Class");
+        custoPlaneClass.setMinWidth(100);
+        custoPlaneClass.setCellValueFactory(new PropertyValueFactory<>("planeClass"));
+
+        customerTable = new TableView<>();
+        customerTable.setItems(getCustomers());
+        customerTable.getColumns().addAll(custoID, custoName, custoPass, custoFlightID, custoPlaneClass);
+        customerTable.setEditable(false);
+
+        VBox vBox = new VBox(10);
+        Button back = new Button("Back");
+
+        vBox.getChildren().addAll(customerTable, back);
+        borderPane.setCenter(vBox);
+
+        back.setOnAction(e-> employeeView());
+    }
+
+    public ObservableList<Customer> getCustomers() throws SQLException {
+        ObservableList<Customer> customers = FXCollections.observableArrayList();
+        for(int i = 0 ; i < customers.size(); i++){
+            customers.add(customers.get(i));
+        }
+        return customers;
     }
 
 
@@ -349,7 +418,6 @@ public class main extends Application {
 
         vBox.getChildren().addAll(grid, hBox);
 
-        employeeDataBase employeeDataBase = new employeeDataBase();
         ArrayList<Employee> employeeArrayList = employeeDataBase.getEmployee();
         submit.setOnAction(e->{
             String name = userText.getText();
@@ -420,6 +488,8 @@ public class main extends Application {
 
         Button planeInfoButton = new Button("Info");
         Button back = new Button("Back");
+        Button add = new Button("Add");
+
         planeHbox.getChildren().addAll(planeInfoButton,back);
         planeVbox.getChildren().addAll(planeTable, planeHbox);
 
@@ -437,6 +507,58 @@ public class main extends Application {
             seePlane(idPlane, name, fClass, eClass, cClass);
         });
         back.setOnAction(e-> employeeView());
+        add.setOnAction(e->{
+            addPlaneMethod();
+        });
+    }
+
+    // method in which we add a plane to the database
+
+    private void addPlaneMethod(){
+        Label nameLabel = new Label("Name: ");
+        Label flabel = new Label("First Class Seats: ");
+        Label elabel = new Label("Economy Class Seats: ");
+        Label clabel = new Label("Coach Class Seats: ");
+
+        TextField textField1 = new TextField();
+        TextField textField2 = new TextField();
+        TextField textField3 = new TextField();
+        TextField textField4 = new TextField();
+
+        textField1.setPromptText("Enter name");
+        textField2.setPromptText("Enter seat number");
+        textField3.setPromptText("Enter seat number");
+        textField4.setPromptText("Enter seat number");
+
+        Button save = new Button("Save");
+        Button cancel = new Button("Cancel");
+
+        VBox vBox = new VBox(10);
+        vBox.setPadding(new Insets(10,10,10,10));
+
+        HBox hBox = new HBox(10);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(10);
+
+        grid.setConstraints(nameLabel, 0,0);
+        grid.setConstraints(textField1, 1,0);
+        grid.setConstraints(flabel, 0,1);
+        grid.setConstraints(textField2, 1,1);
+        grid.setConstraints(elabel, 0,2);
+        grid.setConstraints(textField3, 1,2);
+        grid.setConstraints(clabel, 0,3);
+        grid.setConstraints(textField4, 1,3);
+
+        grid.getChildren().addAll(nameLabel, flabel, clabel, elabel, textField1, textField2, textField3, textField4);
+
+        hBox.getChildren().addAll(save, cancel);
+
+        vBox.getChildren().addAll(grid, hBox);
+
+        borderPane.setCenter(vBox);
+
     }
     // method that displays the plane on which the user clicked on
 
@@ -448,7 +570,7 @@ public class main extends Application {
         Label planeCclass = new Label("Coach Class Seats: "+cclass);
 
         Button back = new Button("Back");
-        Button change = new Button("Change Some Parameters");
+        Button delete = new Button("Delete");
 
         HBox mainHbox = new HBox(10);
         VBox labelVbox = new VBox(8);
@@ -463,7 +585,7 @@ public class main extends Application {
         // improve performance
         ImageView iv2 = new ImageView();
         iv2.setImage(image);
-        iv2.setFitWidth(200);
+        iv2.setFitWidth(400);
         iv2.setPreserveRatio(true);
         iv2.setSmooth(true);
         iv2.setCache(true);
@@ -472,9 +594,24 @@ public class main extends Application {
         back.setOnAction(e-> {
             employeeView();
         });
+        delete.setOnAction(e->{
+            try {
+                planeDataBase.deletePlane(id);
+                Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+                a.setTitle("Plane Delete successful");
+                a.setContentText("Plane has been deleted!");
+                a.setHeaderText(null);
+                a.showAndWait();
+                seePlanes();
+                initialize();
+
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
 
         labelVbox.getChildren().addAll(planeId, planeName, planeFclass, planeEclass, planeCclass);
-        buttonVbox.getChildren().addAll(change, back);
+        buttonVbox.getChildren().addAll(delete, back);
         mainHbox.getChildren().addAll(iv2, labelVbox, buttonVbox);
 
         borderPane.setCenter(mainHbox);
@@ -482,10 +619,8 @@ public class main extends Application {
     // method that gives us all the plane objects to be later on stored into the table view
     private ObservableList<Plane> getPlanes()throws  SQLException{
         ObservableList<Plane> planeObservableList = FXCollections.observableArrayList();
-        planeDataBase planeDb = new planeDataBase();
-        ArrayList<Plane> planeArrayList = planeDb.getPlanes();
-        for(int i = 0; i < planeArrayList.size(); i++){
-            planeObservableList.add(planeArrayList.get(i));
+        for(int i = 0; i < planes.size(); i++){
+            planeObservableList.add(planes.get(i));
         }
         return planeObservableList;
     }
@@ -556,7 +691,7 @@ public class main extends Application {
         grid.setConstraints(planeButton, 19,1);
         grid.setConstraints(customerButton, 3,4);
         grid.setConstraints(employeeButton,19,4);
-        grid.setConstraints(helpButton, 10,6);
+        grid.setConstraints(helpButton, 10,5);
         grid.setPadding(new Insets(10,10,10,10));
         grid.setHgap(5);
         grid.setVgap(10);
@@ -652,13 +787,31 @@ public class main extends Application {
                 e1.printStackTrace();
             }
         });
+        customerButton.setOnAction(e -> {
+            try {
+                customerTable();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
+        Button logOut = new Button("LogOut");
+        logOut.setId("logoutbutton");
+        logOut.setPrefSize(100,70);
+        grid.setConstraints(logOut, 10,6);
+        grid.getChildren().add(logOut);
+
+        logOut.setOnAction(e->{
+            try {
+                signInMethod();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
 
         borderPane.setCenter(grid);
         borderPane.setTop(menuBar);
     }
 
-
-    ArrayList<Flight> flightArrayList;
     int realId=0;
     private void scheduleFlightMethod(Pane pane){
 
@@ -744,18 +897,12 @@ public class main extends Application {
             String fromDate = text2.getText();
             String toDate = text3.getText();
 
-            flightDataBase flightDataBase = new flightDataBase();
-            try {
-                flightArrayList = flightDataBase.getFlights();
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
             // now that we have all the flights we need to check if the required flight
             // can be scheduled
 
             //lets assume that the emp didnt enter the return date
-            for(int i = 0; i< flightArrayList.size(); i++) {
-                if (toDate.equals("No return date") && realId == flightArrayList.get(i).getPlane_id() && fromDate.equals(flightArrayList.get(i).getFromDate())){
+            for(int i = 0; i< flights.size(); i++) {
+                if (toDate.equals("No return date") && realId == flights.get(i).getPlane_id() && fromDate.equals(flights.get(i).getFromDate())){
                     // now we can say that the flight cannot be scheduled
                     Alert a = new Alert(Alert.AlertType.ERROR);
                     a.setTitle("Scheduling error");
@@ -764,7 +911,7 @@ public class main extends Application {
                     a.showAndWait();
                     break;
                 }
-                if(realId == flightArrayList.get(i).getPlane_id() && fromDate.equals(flightArrayList.get(i).getFromDate()) && toDate == flightArrayList.get(i).getReturnDate()){
+                if(realId == flights.get(i).getPlane_id() && fromDate.equals(flights.get(i).getFromDate()) && toDate == flights.get(i).getReturnDate()){
                     Alert a = new Alert(Alert.AlertType.ERROR);
                     a.setTitle("Scheduling error");
                     a.setContentText("Plane is already in use in the gives date, please pick another");
@@ -772,7 +919,7 @@ public class main extends Application {
                     a.showAndWait();
                     break;
                 }
-                if(flightArrayList.size() - i ==1){
+                if(flights.size() - i ==1){
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Flight available");
                     alert.setContentText("Your flight can be scheduled!");
@@ -835,23 +982,17 @@ public class main extends Application {
         PrintWriter out = new PrintWriter(new FileWriter(file, true));
 
         // first table is the employee table
-        employeeDataBase emp = new employeeDataBase();
-        ArrayList<Employee> employeeList = new ArrayList<>();
-        employeeList = emp.getEmployee();
 
-        for(int i = 0; i < employeeList.size(); i++){
-            out.println(employeeList.get(i).getIdEmployee()+","+employeeList.get(i).getFname()+","+employeeList.get(i).getLname()+","+employeeList.get(i).getPassword()+","+employeeList.get(i).getPosition()+","+employeeList.get(i).getSalary());
+        for(int i = 0; i < employees.size(); i++){
+            out.println(employees.get(i).getIdEmployee()+","+employees.get(i).getFname()+","+employees.get(i).getLname()+","+employees.get(i).getPassword()+","+employees.get(i).getPosition()+","+employees.get(i).getSalary());
         }
 
         // now we print the plane table into the same file
-        planeDataBase pln = new planeDataBase();
-        ArrayList<Plane> planeArrayList = new ArrayList<>();
-        planeArrayList = pln.getPlanes();
 
         File file2 = new File("OSCAPlane.csv");
         PrintWriter out2 = new PrintWriter(new FileWriter(file2, true));
-        for(int j = 0; j < planeArrayList.size(); j++){
-            out2.println(planeArrayList.get(j).getIdPlane()+","+planeArrayList.get(j).getName()+","+planeArrayList.get(j).getCoachClass()+","+planeArrayList.get(j).getEconomyClass()+","+planeArrayList.get(j).getFirstClass());
+        for(int j = 0; j < planes.size(); j++){
+            out2.println(planes.get(j).getIdPlane()+","+planes.get(j).getName()+","+planes.get(j).getCoachClass()+","+planes.get(j).getEconomyClass()+","+planes.get(j).getFirstClass());
         }
         out.close();
         out2.close();
@@ -930,10 +1071,8 @@ public class main extends Application {
 
     private ObservableList<Employee> getEmployees()throws  SQLException{
         ObservableList<Employee> employeeObservableList = FXCollections.observableArrayList();
-        employeeDataBase emp = new employeeDataBase();
-        ArrayList<Employee> employeeArrayList = emp.getEmployee();
-        for(int i = 0; i < employeeArrayList.size(); i++){
-            employeeObservableList.add(employeeArrayList.get(i));
+        for(int i = 0; i< employees.size(); i++){
+            employeeObservableList.add(employees.get(i));
         }
         return employeeObservableList;
     }
@@ -990,10 +1129,9 @@ public class main extends Application {
                 moreInfoCheck--;
             }
             else {
-                employeeAddressDataBase addressDataBase = new employeeAddressDataBase();
                 Employee employee = null;
                 try {
-                    employee = addressDataBase.getAddressInfo(id, fname, lname, pass, pos, sal);
+                    employee = dataBaseLayer.employeeAddressDataBase.getAddressInfo(id, fname, lname, pass, pos, sal);
                 } catch (SQLException e1) {
                     e1.printStackTrace();
                 }
@@ -1068,15 +1206,12 @@ public class main extends Application {
         backButton.setOnAction(e-> flightMatchHalf(dest));
         bookButton.setOnAction(e->{
 
-            planeDataBase planeDataBase = new planeDataBase();
-
             int firstClassPlaneSeats = 0, economyClassPlaneSeats = 0, coachClassPlaneSeats = 0;
 
             // now that we have seat number in a plane we need to see how many of the seats
             // are taken inside a plane from a flight method
 
             int fC = 0, eC = 0, cC = 0, plane = 0;
-            flightDataBase flightDataBase = new flightDataBase();
             try {
                 Flight flight = flightDataBase.selectAFlight(flightId);
                 plane = flight.getPlane_id();
@@ -1105,7 +1240,6 @@ public class main extends Application {
             alert.setTitle("Booking Confirmation");
             alert.setHeaderText("Book a ticket");
             alert.setContentText("Are you sure?");
-            customerDataBase cdb = new customerDataBase();
 
             Optional<ButtonType> result = alert.showAndWait();
             int errorCheck = 0;
@@ -1115,7 +1249,7 @@ public class main extends Application {
                     // now we can say that we have seats available
                     // and we can book a ticket in a first class
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId), "first");
+                        customerDataBase.setCustomer(name, passport, String.valueOf(flightId), "first");
                         flightDataBase.setFlightFirstSeats(flightId);
 
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1145,7 +1279,7 @@ public class main extends Application {
                 }
                 if (pick.equals("economy") && economyClassPlaneSeats - eC !=0){
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId), "economy");
+                        customerDataBase.setCustomer(name, passport, String.valueOf(flightId), "economy");
                         flightDataBase.setFlightEconomySeats(flightId);
                         System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1175,7 +1309,7 @@ public class main extends Application {
                 }
                 if(pick.equals("coach") && coachClassPlaneSeats - cC !=0){
                     try {
-                        cdb.setCustomer(name, passport, String.valueOf(flightId), "coach");
+                        customerDataBase.setCustomer(name, passport, String.valueOf(flightId), "coach");
                         flightDataBase.setFlightCoachSeats(flightId);
                         System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1258,38 +1392,14 @@ public class main extends Application {
 
     public ObservableList<Flight> getFlights(){
         ObservableList<Flight> flightObservableList = FXCollections.observableArrayList();
-        flightDataBase flightDataBase = new flightDataBase();
-        ArrayList<Flight> flightList = new ArrayList<>();
-        try {
-            flightList = flightDataBase.getFlights();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        for(int i = 0 ; i< flightList.size(); i ++){
-            flightObservableList.add(flightList.get(i));
+        System.out.println("hello");
+        for(int i = 0 ; i< flights.size(); i ++){
+            System.out.println("I run for the "+i+"st time");
+            flightObservableList.add(flights.get(i));
         }
         return flightObservableList;
     }
-    ArrayList<Customer> customers;
-    ArrayList<Flight> flights;
     private void checkIntMethod(){
-        customerDataBase customerDataBase = new customerDataBase();
-        flightDataBase flightDataBase = new flightDataBase();
-
-        customers = new ArrayList<>();
-        flights = new ArrayList<>();
-
-        try {
-            customers = customerDataBase.getCustomers();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            flights = flightDataBase.getFlights();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
         Label passLabel = new Label("Passport ID: ");
         Label flightIdLabel = new Label("Flight ID: ");
@@ -1347,7 +1457,6 @@ public class main extends Application {
         checkIn.setContent(vBox);
     }
 
-    int flightCheck = 0;
     private void flightStatus()throws SQLException{
         Label flightIdLabel = new Label("Enter Flight ID: ");
         TextField flightText = new TextField();
@@ -1377,15 +1486,12 @@ public class main extends Application {
 
             int flightId = Integer.parseInt(flightText.getText());
 
-            planeDataBase planeDataBase = new planeDataBase();
-
             int firstClassPlaneSeats = 0, economyClassPlaneSeats = 0, coachClassPlaneSeats = 0;
 
             // now that we have seat number in a plane we need to see how many of the seats
             // are taken inside a plane from a flight method
 
             int fC = 0, eC = 0, cC = 0, plane = 0;
-            flightDataBase flightDataBase = new flightDataBase();
             try {
                 Flight flight = flightDataBase.selectAFlight(flightId);
                 plane = flight.getPlane_id();
@@ -1443,9 +1549,6 @@ public class main extends Application {
         VBox mainBox = new VBox(10);
         mainBox.getChildren().addAll(hBox, btnBox, bookingView);
 
-        customerDataBase customerDataBase = new customerDataBase();
-        customers = new ArrayList<>();
-
         try {
             customers = customerDataBase.getCustomers();
         } catch (SQLException e) {
@@ -1498,16 +1601,6 @@ public class main extends Application {
 
         vBox.getChildren().addAll(grid, hBox);
 
-
-        customerDataBase customerDataBase = new customerDataBase();
-        customers = new ArrayList<>();
-
-        try {
-            customers = customerDataBase.getCustomers();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
         cancelButton.setOnAction(e->{
             String passId = text1.getText();
             String flightID = text2.getText();
@@ -1528,7 +1621,6 @@ public class main extends Application {
 
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.get() == ButtonType.OK){
-                        flightDataBase flightDataBase = new flightDataBase();
                         if(planeClass.equals("coach")) {
                             try {
                                 flightDataBase.cancelCoachFlight(Integer.parseInt(fID));
