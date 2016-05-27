@@ -51,4 +51,17 @@ public class planeDataBase {
         }
         return arrayList.get(0);
     }
+
+    public void deletePlane(int id) throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            String query = String.format("DELETE FROM plane WHERE idPlane = '%d'",id );
+            s.executeUpdate(query);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }
