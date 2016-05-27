@@ -64,4 +64,17 @@ public class planeDataBase {
             e.printStackTrace();
         }
     }
+
+    public void addPlane(int id,String name, int fclass, int cclass, int eclass)throws SQLException{
+        try {
+            Class.forName(JDBC_DRIVER);
+            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
+            Statement s = con.createStatement();
+            String query = String.format("INSERT INTO plane (idPlane, Name, FirstClass, EconomyClass, CoachClass) VALUES  ('%d', '%s', '%d', '%d','%d')", id, name , fclass, eclass, cclass);
+            s.executeUpdate(query);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

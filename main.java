@@ -77,6 +77,14 @@ public class main extends Application {
         menuBar.getMenus().addAll(file,edit,help);
         menuBar.setId("bar-menu");
 
+        MenuItem fileItem = new MenuItem("CostumerView");
+        file.getItems().add(fileItem);
+        fileItem.setOnAction(e->
+        {
+            customerviewmethod();
+        });
+
+
         oscaItem.setOnAction(e -> {
             try {
                 oscaMethod();
@@ -381,11 +389,11 @@ public class main extends Application {
     }
 
     public ObservableList<Customer> getCustomers() throws SQLException {
-        ObservableList<Customer> customers = FXCollections.observableArrayList();
+        ObservableList<Customer> customersObserve = FXCollections.observableArrayList();
         for(int i = 0 ; i < customers.size(); i++){
-            customers.add(customers.get(i));
+            customersObserve.add(customers.get(i));
         }
-        return customers;
+        return customersObserve;
     }
 
 
@@ -490,7 +498,7 @@ public class main extends Application {
         Button back = new Button("Back");
         Button add = new Button("Add");
 
-        planeHbox.getChildren().addAll(planeInfoButton,back);
+        planeHbox.getChildren().addAll(planeInfoButton,back, add);
         planeVbox.getChildren().addAll(planeTable, planeHbox);
 
         borderPane.setCenter(planeVbox);
@@ -559,7 +567,65 @@ public class main extends Application {
 
         borderPane.setCenter(vBox);
 
+        save.setOnAction(e->{
+            String name = textField1.getText();
+            String fseats = textField2.getText();
+            String eseats = textField3.getText();
+            String cseats = textField4.getText();
+
+
+            Random r = new Random();
+            int planeId = r.nextInt(99999 - 0 + 1) + 0;
+
+            // checking if the plane with the code exists
+
+            for(int i = 0 ; i < planes.size() ; i++){
+                if(planeId == planes.get(i).getIdPlane()){
+                    planeId = r.nextInt(99999 - 0 + 1) + 0;
+                    i = 0;
+                    // this way we reset the for loop so that it loops again until there is a unused plane id
+                }
+                else
+                    break;
+            }
+
+            try {
+                planeDataBase.addPlane(planeId, name, Integer.parseInt(fseats), Integer.parseInt(cseats), Integer.parseInt(eseats));
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+            a.setTitle("Plane Add Successful");
+            a.setContentText("Plane has been added successfully!");
+            a.setHeaderText(null);
+            a.showAndWait();
+            initialize();
+            try {
+                seePlanes();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
+        cancel.setOnAction(e -> {
+            try {
+                seePlanes();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        });
+
     }
+
+    public void customerviewmethod()
+    {
+        try {
+            start(window);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // method that displays the plane on which the user clicked on
 
     private void seePlane(int id, String name, int fclass, int eclass, int cclass){
