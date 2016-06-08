@@ -1,7 +1,7 @@
 package applicationLayer;
 
 /**
- * Created by Filip on 17-05-2016.
+ * Created by Patrik on 17-05-2016.
  */
 public class Plane {
     private int idPlane;

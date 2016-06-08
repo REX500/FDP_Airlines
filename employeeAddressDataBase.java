@@ -6,14 +6,14 @@ import java.sql.*;
 import java.util.ArrayList;
 
 /**
- * Created by Filip on 24-05-2016.
+ * Created by Patrik on 24-05-2016.
  */
 public class employeeAddressDataBase {
     static final String JDBC_DRIVER  = "com.mysql.jdbc.Driver";
-    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?useSSl=true";
+    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?autoReconnect=true&useSSL=false";
     static Connection con;
-    ArrayList<Employee> employeeArrayList;
-    public Employee getAddressInfo(int empId, String fname, String lname, String pass, String pos, int salary) throws SQLException{
+    static ArrayList<Employee> employeeArrayList;
+    public static Employee getAddressInfo(int empId, String fname, String lname, String pass, String pos, int salary) throws SQLException{
         try {
             Class.forName(JDBC_DRIVER);
             con = DriverManager.getConnection(DATABASE_URL, "root", "password");

@@ -1,0 +1,39 @@
+.text-input{
+    -fx-background-color: #D80000 ;
+    -fx-background-insets: 0 -1 -1 -1, 0 0 0 0, 0 -1 3 -1;
+}
+
+
+#text-search{
+    -fx-font-size: 20pt;
+    -fx-font-family: "Comic Sans MS", cursive, sans-serif;
+
+}
+
+.label{
+    -fx-font-size: 10pt;
+    -fx-font-family: "Arial Black", Gadget, sans-serif;
+}
+#bar-menu{
+    -fx-font-size: 10pt;
+    -fx-font-family: "Arial Black", Gadget, sans-serif;
+}
+#button-search{
+    -fx-opacity: 0.4;
+    -fx-background-color: #1d1d1d;
+    -fx-text-fill: white;
+}
+#in-sign{
+    -fx-opacity: 0.4;
+    -fx-background-color: #1d1d1d;
+    -fx-text-fill: white;
+}
+
+#pane-border{
+    -fx-background-image: url("backround.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-size: 770 480;
+    -fx-background-position: center center;
+    -fx-effect: dropshadow(three-pass-box, black, 30, 0.5, 0, 0);
+}
+

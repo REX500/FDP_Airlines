@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class flightDataBase {
     static final String JDBC_DRIVER  = "com.mysql.jdbc.Driver";
-    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline";
+    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?autoReconnect=true&useSSL=false";
     static Connection con;
 
     ArrayList<Flight> flightArrayList;
@@ -123,18 +123,6 @@ public class flightDataBase {
             int passOnBoard = 0;
 
             String update = String.format("UPDATE flights SET coachClass = coachClass +1 WHERE idFlights = '%d'", flightId);
-            s.executeUpdate(update);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-    public void cancelFlight(int flightID, String planeClass)throws SQLException{
-        try {
-            Class.forName(JDBC_DRIVER);
-            con = DriverManager.getConnection(DATABASE_URL, "root", "password");
-            Statement s = con.createStatement();
-
-            String update = String.format("UPDATE flights SET '%s' = '%s' -1 WHERE idFlights = '%d'", planeClass, planeClass, flightID);
             s.executeUpdate(update);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

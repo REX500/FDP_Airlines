@@ -7,11 +7,11 @@ import java.sql.*;
 import java.util.ArrayList;
 
 /**
- * Created by Filip on 17-05-2016.
+ * Created by Denis on 17-05-2016.
  */
 public class planeDataBase {
     static final String JDBC_DRIVER  = "com.mysql.jdbc.Driver";
-    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?useSSl=true";
+    static final String DATABASE_URL = "jdbc:mysql://localhost:3306/Airline?autoReconnect=true&useSSL=false";
     static Connection con;
 
     ArrayList<Plane> planeArrayList;

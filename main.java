@@ -131,7 +131,11 @@ public class main extends Application {
 
         // making a contect for the booking tab
         // adding a search bar, search button and a calendar
+
+        // date pickers were found on the java2s.com
+
         DatePicker datePicker = new DatePicker();
+
         TextField searchText = new TextField();
         searchText.setPadding(new Insets(40,80,15,80));
         searchText.setPromptText("Search your destination...");
@@ -173,6 +177,8 @@ public class main extends Application {
 
         searchButton.setOnAction(e-> {
             String searchedDestination = searchText.getText();
+
+            // getting date values from date pickers was done using intelliJ and nothing else
             LocalDate datePicFrom = datePickerFrom.getValue();
             LocalDate datePicTo = datePickerTo.getValue();
             // here we get the date values from the datepicker and store
@@ -181,7 +187,6 @@ public class main extends Application {
             int firstMonth = datePicFrom.getMonthValue();
             int firstYear = datePicFrom.getYear();
             String  realFirstDate = firstDay+"/"+firstMonth+"/"+firstYear;
-            System.out.println(realFirstDate);
 
             int secondDay = datePicTo.getDayOfMonth();
             int secondMonth = datePicTo.getMonthValue();
@@ -192,16 +197,16 @@ public class main extends Application {
 
             for(int i= 0 ; i < flights.size(); i++){
                 // here we check if all three parameters match
-                if(searchedDestination.equals(flights.get(i).getDestination()) && realFirstDate.equals(flights.get(i).getFromDate()) && realSecondDate.equals(flights.get(i).getReturnDate())){
+                if(searchedDestination.equalsIgnoreCase(flights.get(i).getDestination()) && realFirstDate.equals(flights.get(i).getFromDate()) && realSecondDate.equals(flights.get(i).getReturnDate())){
                     // now that it matches we do something with it
                     // we make a view with the flight
-                    flightMatchesView(searchedDestination, realFirstDate, realSecondDate, flights.get(i).getIdFlights());
+                    flightMatchesView(flights.get(i).getDestination(), realFirstDate, realSecondDate, flights.get(i).getIdFlights());
                     break;
                 }
                 // if destination match
-                if(searchedDestination.equals(flights.get(i).getDestination())){
+                if(searchedDestination.equalsIgnoreCase(flights.get(i).getDestination())){
                     // here only the destination will match
-                    flightMatchHalf(searchedDestination);
+                    flightMatchHalf(flights.get(i).getDestination());
                     break;
                 }
                 // if there isnt a flight to that country at all
@@ -271,6 +276,7 @@ public class main extends Application {
             planes = planeDataBase.getPlanes();
             flights = flightDataBase.getFlights();
             employees = employeeDataBase.getEmployee();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -290,7 +296,6 @@ public class main extends Application {
 
         HBox hBox = new HBox(10);
         hBox.getChildren().addAll(bookButton, backButton);
-
 
         vBox.getChildren().addAll(destLabel, departLabel, returnLabel, hBox);
 
@@ -333,7 +338,6 @@ public class main extends Application {
             String pick = listView.getSelectionModel().getSelectedItem();
             char v = pick.charAt(0);
             int value = Integer.parseInt(String.valueOf(v));
-            System.out.println(value);
             int realV = value -1;
             int flightId = flights.get(realV).getIdFlights();
 
@@ -597,7 +601,7 @@ public class main extends Application {
 
             Alert a = new Alert(Alert.AlertType.CONFIRMATION);
             a.setTitle("Plane Add Successful");
-            a.setContentText("Plane has been added successfully!");
+            a.setContentText("Plane has been added successfully!\nTo be able to see the plane successfully\nYou need to add the picture with the same name in the project\nSource folder");
             a.setHeaderText(null);
             a.showAndWait();
             initialize();
@@ -697,6 +701,8 @@ public class main extends Application {
          the employeeview screen is not. If you change the size of the employeeview screen, then you need to change the
          icon's place too.
          */
+
+        // Design of the employee view made by Patrik
 
         window.setMaxHeight(625);
         window.setMaxWidth(650);
@@ -1297,8 +1303,6 @@ public class main extends Application {
             } catch (SQLException e1) {
                 e1.printStackTrace();
             }
-            System.out.println(firstClassPlaneSeats+" "+economyClassPlaneSeats+" "+coachClassPlaneSeats);
-            System.out.println(fC + " " + eC + " "+ cC);
 
             String name = fullnameField.getText();
             String passport = passIDField.getText();
@@ -1335,7 +1339,7 @@ public class main extends Application {
                     }
                     errorCheck++;
                 }
-                else if(errorCheck == 0){
+                else if( pick.equals("first") && errorCheck == 0){
                     Alert alba = new Alert(Alert.AlertType.INFORMATION);
                     alba.setTitle("No Space Available");
                     alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the first class");
@@ -1347,7 +1351,6 @@ public class main extends Application {
                     try {
                         customerDataBase.setCustomer(name, passport, String.valueOf(flightId), "economy");
                         flightDataBase.setFlightEconomySeats(flightId);
-                        System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
                         a.setTitle("Customer Registered");
                         a.setContentText("Customer has been registered successfully!\nFlight ID is: "+flightId);
@@ -1365,7 +1368,7 @@ public class main extends Application {
                     }
                     errorCheck++;
                 }
-                else if(errorCheck == 0){
+                else if( pick.equals("economy") && errorCheck == 0){
                     Alert alba = new Alert(Alert.AlertType.INFORMATION);
                     alba.setTitle("No Space Available");
                     alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the economy class");
@@ -1377,7 +1380,6 @@ public class main extends Application {
                     try {
                         customerDataBase.setCustomer(name, passport, String.valueOf(flightId), "coach");
                         flightDataBase.setFlightCoachSeats(flightId);
-                        System.out.println("First Class works!");
                         Alert a = new Alert(Alert.AlertType.CONFIRMATION);
                         a.setTitle("Customer Registered");
                         a.setContentText("Customer has been registered successfully!\nFlight ID is: "+flightId);
@@ -1395,7 +1397,7 @@ public class main extends Application {
                     }
                     errorCheck++;
                 }
-                else if(errorCheck == 0){
+                else if(pick.equals("coach") && errorCheck == 0){
                     Alert alba = new Alert(Alert.AlertType.INFORMATION);
                     alba.setTitle("No Space Available");
                     alba.setContentText("We are sorry to inform you \nThat no seats are available\nIn the coach class");
@@ -1458,9 +1460,7 @@ public class main extends Application {
 
     public ObservableList<Flight> getFlights(){
         ObservableList<Flight> flightObservableList = FXCollections.observableArrayList();
-        System.out.println("hello");
         for(int i = 0 ; i< flights.size(); i ++){
-            System.out.println("I run for the "+i+"st time");
             flightObservableList.add(flights.get(i));
         }
         return flightObservableList;
@@ -1492,30 +1492,26 @@ public class main extends Application {
         vBox.setPadding(new Insets(10,10,10,10));
 
         checkInButton.setOnAction(e->{
-            int check = 0;
+            String passID = passText.getText();
+            String flightID = flightIdText.getText();
             for(int i = 0 ; i < customers.size(); i++){
-                int flightID = Integer.parseInt(customers.get(i).getFlightId());
-                for(int j = 0 ; j < flights.size(); j++){
-                    if(flightID == flights.get(j).getIdFlights()){
-                        Alert a = new Alert(Alert.AlertType.INFORMATION);
-                        a.setTitle("Check-In Successful");
-                        String info = "Welcome "+customers.get(i).getName()+"\nDestination: "+flights.get(j).getDestination()+"\nYou have checked in successfully!";
-                        a.setContentText(info);
-                        a.setHeaderText(null);
-                        a.showAndWait();
-                        check++;
-                        break;
-                    }
-                    if(customers.size() - i == 1){
+                //first we check if the customer exists
+                if(passID.equals(customers.get(i).getPassId()) && flightID.equals(customers.get(i).getFlightId()) ){
+                    Alert a = new Alert(Alert.AlertType.INFORMATION);
+                    a.setTitle("Check-In Successful");
+                    String info = "Welcome "+customers.get(i).getName()+"\nYou have checked in successfully!";
+                    a.setContentText(info);
+                    a.setHeaderText(null);
+                    a.showAndWait();
+                    break;
+                }
+                if(customers.size() - i == 1){
                         Alert a = new Alert(Alert.AlertType.ERROR);
                         a.setTitle("Check In Error");
                         a.setContentText("Please check your log in data and try again!");
                         a.setHeaderText(null);
                         a.showAndWait();
-                    }
                 }
-                if(check == 1)
-                    break;
             }
             passText.clear();
             flightIdText.clear();
@@ -1723,8 +1719,6 @@ public class main extends Application {
                                 }
                             }
 
-                            System.out.println(stringDate);
-
 
                             Date date2 = new Date();
                             DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
@@ -1733,20 +1727,20 @@ public class main extends Application {
                             } catch (ParseException e1) {
                                 e1.printStackTrace();
                             }
-                            System.out.println(date2);
 
                             Date date = new Date();
 
                             Calendar cal = new GregorianCalendar();
                             cal.setTime(date);
                             int weeks = 0;
+
+                            // we found this part of the code from the internet
+                            // found it on stack overflow
                             while (cal.getTime().before(date2)) {
-                                // add another week
                                 cal.add(Calendar.WEEK_OF_YEAR, 1);
                                 weeks++;
                             }
 
-                            System.out.println("Number of weeks: "+weeks);
 
                             if(weeks>2){
                                 Alert a = new Alert(Alert.AlertType.INFORMATION);
